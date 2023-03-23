@@ -263,3 +263,16 @@ where
 
 	Ok(call)
 }
+
+/// For now get the crypto/fiat currency exchange rate from coingecko and CoinMarketCap.
+#[no_mangle]
+pub unsafe extern "C" fn nostr_test(
+	unchecked_extrinsic: *mut u8,
+	unchecked_extrinsic_size: u32,
+) -> sgx_status_t {
+	sgx_status_t::SGX_SUCCESS
+}
+
+fn nostr_test_internal(crypto_currency: String, fiat_currency: String) -> Result<()> {
+	Ok()
+}
