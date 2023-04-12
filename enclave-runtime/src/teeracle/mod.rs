@@ -274,5 +274,5 @@ pub unsafe extern "C" fn nostr_test(
 }
 
 fn nostr_test_internal(crypto_currency: String, fiat_currency: String) -> Result<()> {
-	Ok()
+	Ok(())
 }
