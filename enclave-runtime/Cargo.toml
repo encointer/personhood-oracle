@@ -28,7 +28,7 @@ teeracle = [
     "itp-settings/teeracle",
     "itp-top-pool-author/teeracle",
     "nostr",
-    "tungstenite_sgx"
+    "tungstenite_sgx",
 ]
 test = [
     "ita-stf/test",
@@ -70,6 +70,7 @@ lazy_static = { version = "1.1.0", features = ["spin_no_std"] }
 primitive-types = { version = "0.12.1", default-features = false, features = ["codec", "serde_no_std"] }
 
 nostr = { default-features = false, optional = true, path = "../../../other_repos/nostr/crates/nostr", features = ["alloc", "nip19"] }
+secp256k1 = { version = "0.24", default-features = false, features = ["alloc", "serde"] }
 tungstenite_sgx = { package = "tungstenite", optional = true, features = ["rustls-tls-webpki-roots"], git = "https://github.com/integritee-network/tungstenite-rs-sgx", branch = "sgx-experimental" }
 
 # scs / integritee

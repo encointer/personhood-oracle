@@ -32,6 +32,8 @@ pub trait TeeracleApi: Send + Sync + 'static {
 
 	/// Update weather data for the corresponding coordinates.
 	fn update_weather_data_xt(&self, longitude: &str, latitude: &str) -> EnclaveResult<Vec<u8>>;
+
+	fn send_nostr_test_message(&self) -> EnclaveResult<Vec<u8>>;
 }
 
 impl TeeracleApi for Enclave {
@@ -97,5 +99,14 @@ impl TeeracleApi for Enclave {
 		ensure!(res == sgx_status_t::SGX_SUCCESS, Error::Sgx(res));
 		ensure!(retval == sgx_status_t::SGX_SUCCESS, Error::Sgx(retval));
 		Ok(response)
+	}
+
+	fn send_nostr_test_message(&self) -> EnclaveResult<Vec<u8>> {
+		let mut retval = sgx_status_t::SGX_SUCCESS;
+		let res = unsafe { ffi::send_nostr_test_message(self.eid, &mut retval) };
+
+		ensure!(res == sgx_status_t::SGX_SUCCESS, Error::Sgx(res));
+		ensure!(retval == sgx_status_t::SGX_SUCCESS, Error::Sgx(retval));
+		Ok(vec![])
 	}
 }

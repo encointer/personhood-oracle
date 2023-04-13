@@ -20,6 +20,9 @@
 #[cfg(feature = "teeracle")]
 use crate::teeracle::start_interval_market_update;
 
+#[cfg(feature = "teeracle")]
+use crate::teeracle::nostr_trigger;
+
 #[cfg(not(feature = "dcap"))]
 use crate::utils::check_files;
 
@@ -483,6 +486,11 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	// initialize teeracle interval
 	#[cfg(feature = "teeracle")]
 	if WorkerModeProvider::worker_mode() == WorkerMode::Teeracle {
+		// Send nostr msg
+		nostr_trigger(enclave.as_ref());
+
+		//ensure!(result == sgx_status_t::SGX_SUCCESS, Error::Sgx(result));
+
 		start_interval_market_update(
 			&node_api,
 			run_config.teeracle_update_interval,

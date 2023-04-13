@@ -131,6 +131,8 @@ enclave {
 			[out, size=unchecked_extrinsic_size] uint8_t* unchecked_extrinsic, uint32_t unchecked_extrinsic_size
 		);
 
+		public sgx_status_t send_nostr_test_message();
+
 		public sgx_status_t dump_ias_ra_cert_to_disk();
 
 		public sgx_status_t dump_dcap_ra_cert_to_disk([in] const sgx_target_info_t* quoting_enclave_target_info, uint32_t quote_size);
