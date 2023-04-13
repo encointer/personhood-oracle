@@ -274,5 +274,72 @@ pub unsafe extern "C" fn nostr_test(
 }
 
 fn nostr_test_internal(crypto_currency: String, fiat_currency: String) -> Result<()> {
-	Ok(())
+    use tungstenite_sgx as tungstenite;
+    use nostr::prelude::*;
+    use tungstenite::{Message as WsMessage};
+    use nostr::Keys;
+    use nostr::Event;
+    use nostr::EventBuilder;
+    use nostr::ClientMessage;
+    use nostr::ChannelId;
+    use nostr::EventId;
+       // Generate new random keys
+    //let my_keys = Keys::generate();
+
+    // or use your already existing
+    //
+    // From HEX or Bech32
+    let my_keys = Keys::from_sk_str("nsec13wqyx0syeu7unce6d7p8x4rqqe7elpfpr9ywsl5y6x427dzj8tyq36ku2r")?;
+
+    // Show bech32 public key
+    let bech32_pubkey: String = my_keys.public_key().to_bech32()?;
+    println!("Bech32 PubKey: {}", bech32_pubkey);
+    println!("Secret key: {}", my_keys.secret_key()?.to_bech32()?);
+
+    let metadata = Metadata::new()
+        .name("somediddelidoo")
+        .display_name("Some Diddelidoo")
+        .about("I'm just testing");
+
+    let event: Event = EventBuilder::set_metadata(metadata)?.to_event(&my_keys)?;
+
+    // New text note
+    let event: Event = EventBuilder::new_text_note("Hello from Nostr SDK", &[]).to_event(&my_keys)?;
+
+    // Connect to relay
+    let (mut socket, _) = tungstenite::connect("wss://relay.damus.io").expect("Can't connect to relay");
+
+    println!("sending text message with id {}", event.id.to_bech32()?);
+
+    // Send msg
+    let msg = ClientMessage::new_event(event).as_json();
+    socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
+
+    
+/*
+    // create channel
+    let metadata = Metadata::new()
+        .name("diddelichannel")
+        .about("I'm just testing")
+        .picture(Url::parse("https://placekitten.com/200/200")?);
+    let event: Event = EventBuilder::new_channel(metadata)?.to_event(&my_keys)?;
+    println!("creating channel with ID {}", event.id.to_bech32()?);
+    let msg = ClientMessage::new_event(event).as_json();
+  
+    socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
+*/
+    let channel_id = ChannelId::from(EventId::from_bech32("note18kst54gwje8n5t3cfpdud4duwh37wtfu4zpefd6a6q24nc2uecqs6vy8lq")?);
+
+    println!("posting a message to channel {}", channel_id);
+
+    let event: Event = EventBuilder::new_channel_msg(channel_id,
+        Some(Url::parse("wss://relay.damus.io")?), "post in channel").to_event(&my_keys)?;
+    
+      
+    let msg = ClientMessage::new_event(event).as_json();
+  
+    socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
+
+    
+    Ok(())
 }
