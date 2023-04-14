@@ -214,6 +214,8 @@ fn main() {
 			tokio_handle,
 			initialization_handler,
 		);
+	//let enclave = Arc::try_unwrap(enclave).unwrap();
+	//enclave.destroy();
 	} else if let Some(smatches) = matches.subcommand_matches("request-state") {
 		println!("*** Requesting state from a registered worker \n");
 		let node_api =
@@ -491,12 +493,12 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 
 		//ensure!(result == sgx_status_t::SGX_SUCCESS, Error::Sgx(result));
 
-		start_interval_market_update(
-			&node_api,
-			run_config.teeracle_update_interval,
-			enclave.as_ref(),
-			&teeracle_tokio_handle,
-		);
+		// start_interval_market_update(
+		// 	&node_api,
+		// 	run_config.teeracle_update_interval,
+		// 	enclave.as_ref(),
+		// 	&teeracle_tokio_handle,
+		// );
 	}
 
 	if WorkerModeProvider::worker_mode() != WorkerMode::Teeracle {
@@ -554,7 +556,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 
 	println!("[+] Subscribed to events. waiting...");
 	let timeout = Duration::from_millis(10);
-	loop {
+	return loop {
 		if let Ok(msg) = receiver.recv_timeout(timeout) {
 			if let Ok(events) = parse_events(msg.clone()) {
 				print_events(events, sender.clone())

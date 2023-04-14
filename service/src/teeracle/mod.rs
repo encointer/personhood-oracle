@@ -53,6 +53,7 @@ pub(crate) fn start_interval_market_update<E: TeeracleApi>(
 
 pub(crate) fn nostr_trigger<E: TeeracleApi>(enclave: &E) {
 	enclave.send_nostr_test_message();
+	// Register signal handler
 }
 
 fn execute_weather_update<E: TeeracleApi>(

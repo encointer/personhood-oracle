@@ -1351,7 +1351,7 @@ dependencies = [
 [[package]]
 name = "http"
 version = "0.2.1"
-source = "git+https://github.com/integritee-network/http-sgx.git?branch=sgx-experimental#307b5421fb7a489a114bede0dc05c8d32b804f49"
+source = "git+https://github.com/integritee-network/http-sgx?branch=sgx-experimental#307b5421fb7a489a114bede0dc05c8d32b804f49"
 dependencies = [
  "bytes 1.0.1",
  "fnv",

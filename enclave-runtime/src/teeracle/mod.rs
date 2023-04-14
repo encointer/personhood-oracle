@@ -270,8 +270,115 @@ pub unsafe extern "C" fn send_nostr_test_message(
 	unchecked_extrinsic: *mut u8,
 	unchecked_extrinsic_size: u32,
 ) -> sgx_status_t {
-	nostr_test_internal();
+	println!("calling working nostr function");
+	nostr_test_works();
+	println!("call finished working nostr function");
+
+	//nostr_test_internal();
 	sgx_status_t::SGX_SUCCESS
+}
+
+fn nostr_test_works() -> Result<()> {
+	use nostr::prelude::*;
+	use tungstenite_sgx as tungstenite;
+
+	use nostr::{
+		key::FromSkStr,
+		nips::nip19::{FromBech32, ToBech32},
+		types::{Metadata as NostrMetadata, Timestamp as NostrTimestamp},
+		ChannelId, ClientMessage, Event, EventBuilder, EventId, Keys,
+	};
+
+	use itp_time_utils::now_as_secs;
+	use secp256k1::Secp256k1;
+	use tungstenite::Message as WsMessage;
+
+	let secp = Secp256k1::new();
+
+	// Generate new random keys
+	//let my_keys = Keys::generate();
+
+	// or use your already existing
+	//
+	// From HEX or Bech32
+	let my_keys =
+		Keys::from_sk_str("nsec13wqyx0syeu7unce6d7p8x4rqqe7elpfpr9ywsl5y6x427dzj8tyq36ku2r", &secp)
+			.unwrap();
+
+	// Show bech32 public key
+	let bech32_pubkey: String = my_keys.public_key().to_bech32().unwrap();
+	println!("Bech32 PubKey: {}", bech32_pubkey);
+	println!("Secret key: {}", my_keys.secret_key().unwrap().to_bech32().unwrap());
+
+	let metadata = NostrMetadata::new()
+		.name("somediddelidoo")
+		.display_name("Some Diddelidoo")
+		.about("I'm just testing");
+
+	println!("metadata is: {:#?}", &metadata);
+
+	let timestamp = NostrTimestamp::from(now_as_secs());
+	println!("timestamp is: {:#?}", &timestamp);
+
+	let event: Event = EventBuilder::set_metadata(metadata)
+		.to_event_with_timestamp_with_secp(&my_keys, timestamp, &secp)
+		.unwrap();
+	println!("event is: {:#?}", &event);
+
+	// New text note
+	let timestamp = NostrTimestamp::from(now_as_secs());
+	let event: Event = EventBuilder::new_text_note("Hello from Nostr SDK - in enclave", &[])
+		.to_event_with_timestamp_with_secp(&my_keys, timestamp, &secp)
+		.unwrap();
+	println!("event is: {:#?}", &event);
+
+	// Connect to relay
+	let (mut socket, response) =
+		tungstenite::connect("wss://nostr.lu.ke").expect("Can't connect to relay");
+
+	println!("response is: {:#?}", &response);
+	println!("socket is: {:#?}", &socket);
+
+	println!("sending text message with id {}", event.id.to_bech32().unwrap());
+
+	// Send msg
+	let msg = ClientMessage::new_event(event).as_json();
+	socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
+
+	/*
+		// create channel
+		let metadata = Metadata::new()
+			.name("diddelichannel")
+			.about("I'm just testing")
+			.picture(Url::parse("https://placekitten.com/200/200")?);
+
+		let event: Event = EventBuilder::new_channel(metadata)?.to_event(&my_keys)?;
+
+		println!("creating channel with ID {}", event.id.to_bech32()?);
+		let msg = ClientMessage::new_event(event).as_json();
+
+		socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
+	*/
+	let channel_id = ChannelId::from(
+		EventId::from_bech32("note18kst54gwje8n5t3cfpdud4duwh37wtfu4zpefd6a6q24nc2uecqs6vy8lq")
+			.unwrap(),
+	);
+
+	println!("posting a message to channel {}", channel_id);
+
+	let timestamp = NostrTimestamp::from(now_as_secs());
+	let event: Event = EventBuilder::new_channel_msg(
+		channel_id,
+		Url::parse("wss://relay.damus.io").unwrap(),
+		"post in channel",
+	)
+	.to_event_with_timestamp_with_secp(&my_keys, timestamp, &secp)
+	.unwrap();
+
+	let msg = ClientMessage::new_event(event).as_json();
+
+	socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
+	Ok(())
 }
 
 fn nostr_test_internal() -> Result<()> {
@@ -321,7 +428,7 @@ fn nostr_test_internal() -> Result<()> {
 
 	// Connect to relay
 	let (mut socket, response) =
-		tungstenite::connect("wss://relay.damus.io").expect("Can't connect to relay");
+		tungstenite::connect("wss://nostr.lu.ke").expect("Can't connect to relay");
 
 	println!("response is: {:#?}", &response);
 	println!("socket is: {:#?}", &socket);
