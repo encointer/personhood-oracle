@@ -73,7 +73,6 @@ nostr = { default-features = false, optional = true, path = "../../../other_repo
 secp256k1 = { version = "0.24", default-features = false, features = ["alloc", "serde"] }
 signal-hook = { version = "0.3.4", features = ["extended-siginfo"] }
 tungstenite_sgx = { package = "tungstenite", optional = true, features = ["rustls-tls-webpki-roots"], git = "https://github.com/integritee-network/tungstenite-rs-sgx", branch = "sgx-experimental" }
-signal-hook = { version = "0.3.4", features = ["extended-siginfo"] }
 #tungstenite_sgx = { package = "tungstenite", optional = true, features = ["rustls-tls-webpki-roots"], path = "../../../other_repos/tungstenite-rs-sgx" }
 
 # scs / integritee

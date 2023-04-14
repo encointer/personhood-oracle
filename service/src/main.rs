@@ -205,17 +205,27 @@ fn main() {
 			);
 		}
 
-		start_worker::<_, _, _, _, WorkerModeProvider>(
+		println!("enclave strong count is: {}", Arc::strong_count(&enclave));
+		// Holy moly, unsafe incoming
+
+		//let enclave = Arc::try_unwrap(enclave_ptr).unwrap();
+
+		std::thread::sleep(Duration::from_secs(60));
+
+		let raw_enclave = Arc::into_raw(enclave) as *mut Enclave;
+		let enclave = unsafe { &mut *raw_enclave };
+		let enclave = std::mem::take(enclave);
+		start_worker::<_, _, _, WorkerModeProvider>(
 			config,
 			&shard,
-			enclave,
+			&enclave,
 			sidechain_blockstorage,
 			node_api,
 			tokio_handle,
 			initialization_handler,
 		);
-	//let enclave = Arc::try_unwrap(enclave).unwrap();
-	//enclave.destroy();
+
+		enclave.destroy();
 	} else if let Some(smatches) = matches.subcommand_matches("request-state") {
 		println!("*** Requesting state from a registered worker \n");
 		let node_api =
@@ -284,23 +294,24 @@ fn main() {
 
 /// FIXME: needs some discussion (restructuring?)
 #[allow(clippy::too_many_arguments)]
-fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
+fn start_worker<T, D, InitializationHandler, WorkerModeProvider>(
 	config: Config,
 	shard: &ShardIdentifier,
-	enclave: Arc<E>,
+	//enclave: Arc<E>,
+	enclave: &Enclave,
 	sidechain_storage: Arc<D>,
 	node_api: ParentchainApi,
 	tokio_handle_getter: Arc<T>,
 	initialization_handler: Arc<InitializationHandler>,
 ) where
 	T: GetTokioHandle,
-	E: EnclaveBase
-		+ DirectRequest
-		+ Sidechain
-		+ RemoteAttestation
-		+ TlsRemoteAttestation
-		+ TeeracleApi
-		+ Clone,
+	// E: EnclaveBase
+	// 	+ DirectRequest
+	// 	+ Sidechain
+	// 	+ RemoteAttestation
+	// 	+ TlsRemoteAttestation
+	// 	+ TeeracleApi
+	// 	+ Clone,
 	D: BlockPruner + FetchBlocks<SignedSidechainBlock> + Sync + Send + 'static,
 	InitializationHandler: TrackInitialization + IsInitialized + Sync + Send + 'static,
 	WorkerModeProvider: ProvideWorkerMode,
@@ -327,16 +338,16 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	println!("MU-RA server listening on {}", config.mu_ra_url());
 	let is_development_mode = run_config.dev;
 	let ra_url = config.mu_ra_url();
-	let enclave_api_key_prov = enclave.clone();
-	thread::spawn(move || {
-		enclave_run_state_provisioning_server(
-			enclave_api_key_prov.as_ref(),
-			sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,
-			&ra_url,
-			skip_ra,
-		);
-		info!("State provisioning server stopped.");
-	});
+	// let enclave_api_key_prov = enclave.clone();
+	// thread::spawn(move || {
+	// 	enclave_run_state_provisioning_server(
+	// 		enclave_api_key_prov.as_ref(),
+	// 		sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,
+	// 		&ra_url,
+	// 		skip_ra,
+	// 	);
+	// 	info!("State provisioning server stopped.");
+	// });
 
 	let tokio_handle = tokio_handle_getter.get_handle();
 
@@ -345,7 +356,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 
 	// ------------------------------------------------------------------------
 	// Get the public key of our TEE.
-	let tee_accountid = enclave_account(enclave.as_ref());
+	let tee_accountid = enclave_account(enclave);
 	println!("Enclave account {:} ", &tee_accountid.to_ss58check());
 
 	// ------------------------------------------------------------------------
@@ -381,45 +392,45 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 
 	// ------------------------------------------------------------------------
 	// Start trusted worker rpc server
-	if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain
-		|| WorkerModeProvider::worker_mode() == WorkerMode::OffChainWorker
-	{
-		let direct_invocation_server_addr = config.trusted_worker_url_internal();
-		let enclave_for_direct_invocation = enclave.clone();
-		thread::spawn(move || {
-			println!(
-				"[+] Trusted RPC direct invocation server listening on {}",
-				direct_invocation_server_addr
-			);
-			enclave_for_direct_invocation
-				.init_direct_invocation_server(direct_invocation_server_addr)
-				.unwrap();
-			println!("[+] RPC direct invocation server shut down");
-		});
-	}
+	// if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain
+	// 	|| WorkerModeProvider::worker_mode() == WorkerMode::OffChainWorker
+	// {
+	// 	let direct_invocation_server_addr = config.trusted_worker_url_internal();
+	// 	let enclave_for_direct_invocation = enclave.clone();
+	// 	thread::spawn(move || {
+	// 		println!(
+	// 			"[+] Trusted RPC direct invocation server listening on {}",
+	// 			direct_invocation_server_addr
+	// 		);
+	// 		enclave_for_direct_invocation
+	// 			.init_direct_invocation_server(direct_invocation_server_addr)
+	// 			.unwrap();
+	// 		println!("[+] RPC direct invocation server shut down");
+	// 	});
+	// }
 
 	// ------------------------------------------------------------------------
 	// Start untrusted worker rpc server.
 	// i.e move sidechain block importing to trusted worker.
-	if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain {
-		sidechain_start_untrusted_rpc_server(
-			&config,
-			enclave.clone(),
-			sidechain_storage.clone(),
-			tokio_handle,
-		);
-	}
+	// if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain {
+	// 	sidechain_start_untrusted_rpc_server(
+	// 		&config,
+	// 		enclave.clone(),
+	// 		sidechain_storage.clone(),
+	// 		tokio_handle,
+	// 	);
+	// }
 
 	// ------------------------------------------------------------------------
 	// Init parentchain specific stuff. Needed for parentchain communication.
-	let parentchain_handler = Arc::new(
-		ParentchainHandler::new_with_automatic_light_client_allocation(
-			node_api.clone(),
-			enclave.clone(),
-		)
-		.unwrap(),
-	);
-	let last_synced_header = parentchain_handler.init_parentchain_components().unwrap();
+	// let parentchain_handler = Arc::new(
+	// 	ParentchainHandler::new_with_automatic_light_client_allocation(
+	// 		node_api.clone(),
+	// 		enclave.clone(),
+	// 	)
+	// 	.unwrap(),
+	// );
+	// let last_synced_header = parentchain_handler.init_parentchain_components().unwrap();
 	let nonce = node_api.get_nonce_of(&tee_accountid).unwrap();
 	info!("Enclave nonce = {:?}", nonce);
 	enclave
@@ -489,7 +500,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	#[cfg(feature = "teeracle")]
 	if WorkerModeProvider::worker_mode() == WorkerMode::Teeracle {
 		// Send nostr msg
-		nostr_trigger(enclave.as_ref());
+		nostr_trigger(enclave);
 
 		//ensure!(result == sgx_status_t::SGX_SUCCESS, Error::Sgx(result));
 
@@ -501,41 +512,41 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 		// );
 	}
 
-	if WorkerModeProvider::worker_mode() != WorkerMode::Teeracle {
-		println!("*** [+] Finished syncing light client, syncing parentchain...");
+	// if WorkerModeProvider::worker_mode() != WorkerMode::Teeracle {
+	// 	println!("*** [+] Finished syncing light client, syncing parentchain...");
 
-		// Syncing all parentchain blocks, this might take a while..
-		let mut last_synced_header =
-			parentchain_handler.sync_parentchain(last_synced_header).unwrap();
+	// 	// Syncing all parentchain blocks, this might take a while..
+	// 	let mut last_synced_header =
+	// 		parentchain_handler.sync_parentchain(last_synced_header).unwrap();
 
-		// ------------------------------------------------------------------------
-		// Initialize the sidechain
-		if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain {
-			last_synced_header = sidechain_init_block_production(
-				enclave,
-				&register_enclave_xt_header,
-				we_are_primary_validateer,
-				parentchain_handler.clone(),
-				sidechain_storage,
-				&last_synced_header,
-			)
-			.unwrap();
-		}
+	// 	// ------------------------------------------------------------------------
+	// 	// Initialize the sidechain
+	// 	if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain {
+	// 		last_synced_header = sidechain_init_block_production(
+	// 			enclave,
+	// 			&register_enclave_xt_header,
+	// 			we_are_primary_validateer,
+	// 			parentchain_handler.clone(),
+	// 			sidechain_storage,
+	// 			&last_synced_header,
+	// 		)
+	// 		.unwrap();
+	// 	}
 
-		// ------------------------------------------------------------------------
-		// start parentchain syncing loop (subscribe to header updates)
-		thread::Builder::new()
-			.name("parentchain_sync_loop".to_owned())
-			.spawn(move || {
-				if let Err(e) =
-					subscribe_to_parentchain_new_headers(parentchain_handler, last_synced_header)
-				{
-					error!("Parentchain block syncing terminated with a failure: {:?}", e);
-				}
-				println!("[!] Parentchain block syncing has terminated");
-			})
-			.unwrap();
-	}
+	// 	// ------------------------------------------------------------------------
+	// 	// start parentchain syncing loop (subscribe to header updates)
+	// 	thread::Builder::new()
+	// 		.name("parentchain_sync_loop".to_owned())
+	// 		.spawn(move || {
+	// 			if let Err(e) =
+	// 				subscribe_to_parentchain_new_headers(parentchain_handler, last_synced_header)
+	// 			{
+	// 				error!("Parentchain block syncing terminated with a failure: {:?}", e);
+	// 			}
+	// 			println!("[!] Parentchain block syncing has terminated");
+	// 		})
+	// 		.unwrap();
+	// }
 
 	// ------------------------------------------------------------------------
 	if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain {
@@ -556,13 +567,13 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 
 	println!("[+] Subscribed to events. waiting...");
 	let timeout = Duration::from_millis(10);
-	return loop {
-		if let Ok(msg) = receiver.recv_timeout(timeout) {
-			if let Ok(events) = parse_events(msg.clone()) {
-				print_events(events, sender.clone())
-			}
-		}
-	}
+	// return loop {
+	// 	if let Ok(msg) = receiver.recv_timeout(timeout) {
+	// 		if let Ok(events) = parse_events(msg.clone()) {
+	// 			print_events(events, sender.clone())
+	// 		}
+	// 	}
+	// }
 }
 
 /// Start polling loop to wait until we have a worker for a shard registered on
