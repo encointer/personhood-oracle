@@ -54,7 +54,7 @@ source = "git+https://github.com/scs/substrate-api-client.git?branch=polkadot-v0
 dependencies = [
  "frame-system",
  "hex",
- "impl-serde",
+ "impl-serde 0.4.0",
  "pallet-assets",
  "pallet-balances",
  "pallet-contracts",
@@ -904,6 +904,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49fc9a695bca7f35f5f4c15cddc84415f66a74ea78eef08e90c5024f2b540e23"
+dependencies = [
+ "crc-catalog",
+]
+
+[[package]]
+name = "crc-catalog"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ccaeedb56da03b09f598226e25e80088cb4cd25f316e6e4df7d695f0feeb1403"
+
+[[package]]
 name = "crc32fast"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1333,6 +1348,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "encointer-primitives"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42#e443bdd15f38f76f01c1f17732ce8376708556f7"
+dependencies = [
+ "bs58",
+ "crc",
+ "ep-core",
+ "frame-support",
+ "geohash",
+ "log 0.4.19",
+ "parity-scale-codec",
+ "scale-info",
+ "serde 1.0.164",
+ "sp-core",
+ "sp-io 7.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42)",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "env_logger"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1372,6 +1407,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e48c92028aaa870e83d51c64e5d4e0b6981b360c522198c23959f219a4e1b15b"
 
 [[package]]
+name = "ep-core"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42#e443bdd15f38f76f01c1f17732ce8376708556f7"
+dependencies = [
+ "impl-serde 0.3.2",
+ "parity-scale-codec",
+ "scale-info",
+ "serde 1.0.164",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+ "substrate-fixed",
+]
+
+[[package]]
 name = "errno"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1402,7 +1453,7 @@ dependencies = [
  "fixed-hash",
  "impl-codec",
  "impl-rlp",
- "impl-serde",
+ "impl-serde 0.4.0",
  "scale-info",
  "tiny-keccak",
 ]
@@ -1435,7 +1486,7 @@ dependencies = [
  "fixed-hash",
  "impl-codec",
  "impl-rlp",
- "impl-serde",
+ "impl-serde 0.4.0",
  "primitive-types",
  "scale-info",
  "uint",
@@ -1682,7 +1733,7 @@ version = "1.0.0-dev"
 source = "git+https://github.com/integritee-network/frontier.git?branch=bar/polkadot-v0.9.42#a5a5e1e6ec08cd542a6084c310863150fb8841b1"
 dependencies = [
  "hex",
- "impl-serde",
+ "impl-serde 0.4.0",
  "libsecp256k1",
  "log 0.4.19",
  "parity-scale-codec",
@@ -2168,6 +2219,16 @@ dependencies = [
  "typenum 1.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "version_check",
  "zeroize",
+]
+
+[[package]]
+name = "geohash"
+version = "0.13.0"
+source = "git+https://github.com/encointer/geohash?tag=v0.13.0#ad60d861f6bdbfd96ee9318f82554a7bec3089af"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "substrate-fixed",
 ]
 
 [[package]]
@@ -2660,6 +2721,15 @@ dependencies = [
 
 [[package]]
 name = "impl-serde"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4551f042f3438e64dbd6226b20527fc84a6e1fe65688b58746a2f53623f25f5c"
+dependencies = [
+ "serde 1.0.164",
+]
+
+[[package]]
+name = "impl-serde"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc88fc67028ae3db0c853baa36269d398d5f45b6982f95549ff5def78c935cd"
@@ -2732,6 +2802,7 @@ dependencies = [
  "blake2-rfc",
  "chrono 0.4.26",
  "clap 3.2.25",
+ "encointer-primitives",
  "env_logger 0.9.3",
  "frame-system",
  "hdrhistogram",
@@ -2824,6 +2895,7 @@ dependencies = [
  "base58",
  "clap 2.34.0",
  "dirs",
+ "encointer-primitives",
  "env_logger 0.9.3",
  "frame-support",
  "frame-system",
@@ -6072,7 +6144,7 @@ dependencies = [
  "fixed-hash",
  "impl-codec",
  "impl-rlp",
- "impl-serde",
+ "impl-serde 0.4.0",
  "scale-info",
  "uint",
 ]
@@ -7679,7 +7751,7 @@ dependencies = [
  "futures 0.3.28",
  "hash-db 0.16.0",
  "hash256-std-hasher",
- "impl-serde",
+ "impl-serde 0.4.0",
  "lazy_static",
  "libsecp256k1",
  "log 0.4.19",
@@ -8006,7 +8078,7 @@ name = "sp-storage"
 version = "7.0.0"
 source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
 dependencies = [
- "impl-serde",
+ "impl-serde 0.4.0",
  "parity-scale-codec",
  "ref-cast",
  "serde 1.0.164",
@@ -8078,7 +8150,7 @@ name = "sp-version"
 version = "5.0.0"
 source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
 dependencies = [
- "impl-serde",
+ "impl-serde 0.4.0",
  "parity-scale-codec",
  "parity-wasm",
  "scale-info",
