@@ -31,7 +31,7 @@ pub enum PersonhoodOracleCommand {
 impl PersonhoodOracleCommand {
 	pub fn run(&self, cli: &Cli) {
 		match self {
-			FetchReputation(FetchReputationCmd) => FetchReputationCmd.run(&cli),
+			FetchReputation(fetch_reputation_cmd) => fetch_reputation_cmd.run(&cli),
 		}
 	}
 }
