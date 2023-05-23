@@ -19,9 +19,10 @@ use encointer_primitives::{
 	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
 };
 use itp_node_api::api_client::ParentchainApi;
+use itp_types::H256;
 use my_node_runtime::AccountId;
 use std::str::FromStr;
-use substrate_api_client::GetStorage;
+use substrate_api_client::{GetStorage, ReadProof};
 
 #[derive(Debug, Clone, Parser)]
 pub struct FetchReputationCmd {
@@ -39,8 +40,17 @@ impl FetchReputationCmd {
 
 		let reputations =
 			query_last_n_reputations(&api, &account, cid, cindex, self.number_of_reputations);
+		let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
+
+		let read_proofs = get_read_proofs(&api, &account, cid, cindex, self.number_of_reputations);
 
 		println!("reputation for {} is: {:#?}", account, reputations);
+		println!(
+			"verified reputatations number{} out of:{}",
+			verified_reputations,
+			reputations.len()
+		);
+		println!("read proof is: {:#?}", read_proofs);
 	}
 }
 
@@ -77,5 +87,25 @@ fn query_last_n_reputations(
 ) -> Vec<Reputation> {
 	(0..=n)
 		.map(|i| get_reputation(api, prover, cid.clone(), current_cindex - i))
+		.collect()
+}
+
+fn get_read_proofs(
+	api: &ParentchainApi,
+	prover: &AccountId,
+	cid: CommunityIdentifier,
+	current_cindex: CeremonyIndexType,
+	n: CeremonyIndexType,
+) -> Vec<substrate_api_client::api::error::Result<Option<ReadProof<H256>>>> {
+	(0..=n)
+		.map(|i| {
+			api.get_storage_double_map_proof(
+				"EncointerCeremonies",
+				"ParticipantReputation",
+				(cid.clone(), current_cindex - i),
+				prover.clone(),
+				None,
+			)
+		})
 		.collect()
 }
