@@ -27,23 +27,24 @@ use substrate_api_client::GetStorage;
 pub struct FetchReputationCmd {
 	pub account: String,
 	pub cid: String,
-	pub cindex: CeremonyIndexType,
+	pub number_of_reputations: CeremonyIndexType,
 }
 
 impl FetchReputationCmd {
 	pub fn run(&self, cli: &Cli) {
 		let api = get_chain_api(&cli);
 		let cid = CommunityIdentifier::from_str(&self.cid).unwrap();
-		let cindex = self.cindex;
+		let cindex = get_ceremony_index(&api);
 		let account = get_accountid_from_str(&self.account);
 
-		let reputation = get_reputation(&api, &account, cid, cindex);
+		let reputations =
+			query_last_n_reputations(&api, &account, cid, cindex, self.number_of_reputations);
 
-		println!("reputation for {} is: {:#?}", account, reputation);
+		println!("reputation for {} is: {:#?}", account, reputations);
 	}
 }
 
-pub fn get_reputation(
+fn get_reputation(
 	api: &ParentchainApi,
 	prover: &AccountId,
 	cid: CommunityIdentifier,
@@ -59,4 +60,22 @@ pub fn get_reputation(
 	.unwrap()
 	.or(Some(Reputation::Unverified))
 	.unwrap()
+}
+
+fn get_ceremony_index(api: &ParentchainApi) -> CeremonyIndexType {
+	api.get_storage_value("EncointerScheduler", "CurrentCeremonyIndex", None)
+		.unwrap()
+		.unwrap()
+}
+
+fn query_last_n_reputations(
+	api: &ParentchainApi,
+	prover: &AccountId,
+	cid: CommunityIdentifier,
+	current_cindex: CeremonyIndexType,
+	n: CeremonyIndexType,
+) -> Vec<Reputation> {
+	(0..=n)
+		.map(|i| get_reputation(api, prover, cid.clone(), current_cindex - i))
+		.collect()
 }
