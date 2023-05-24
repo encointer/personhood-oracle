@@ -20,6 +20,7 @@ use encointer_primitives::{
 };
 use itp_node_api::api_client::ParentchainApi;
 use itp_types::H256;
+use log::error;
 use my_node_runtime::AccountId;
 use std::str::FromStr;
 use substrate_api_client::{GetStorage, ReadProof};
@@ -38,6 +39,14 @@ impl FetchReputationCmd {
 		let cindex = get_ceremony_index(&api);
 		let account = get_accountid_from_str(&self.account);
 
+		if cindex < self.number_of_reputations {
+			error!(
+				"current ceremony index is {}, can't fetch last {} ceremonies.",
+				cindex, self.number_of_reputations
+			);
+			return
+		}
+
 		let reputations =
 			query_last_n_reputations(&api, &account, cid, cindex, self.number_of_reputations);
 		let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
@@ -46,7 +55,7 @@ impl FetchReputationCmd {
 
 		println!("reputation for {} is: {:#?}", account, reputations);
 		println!(
-			"verified reputatations number{} out of:{}",
+			"verified reputatations number: {} out of:{}",
 			verified_reputations,
 			reputations.len()
 		);
@@ -85,7 +94,7 @@ fn query_last_n_reputations(
 	current_cindex: CeremonyIndexType,
 	n: CeremonyIndexType,
 ) -> Vec<Reputation> {
-	(0..=n)
+	(0..n)
 		.map(|i| get_reputation(api, prover, cid.clone(), current_cindex - i))
 		.collect()
 }
