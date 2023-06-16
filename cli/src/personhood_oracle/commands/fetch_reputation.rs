@@ -32,6 +32,9 @@ pub struct FetchReputationCmd {
 	pub number_of_reputations: CeremonyIndexType,
 }
 
+pub type ReputationReadProof = substrate_api_client::api::error::Result<Option<ReadProof<H256>>>;
+pub type ReputationsWithReadProofs = (Vec<Reputation>, Vec<ReputationReadProof>);
+
 impl FetchReputationCmd {
 	pub fn run(&self, cli: &Cli) {
 		let api = get_chain_api(&cli);
@@ -39,27 +42,45 @@ impl FetchReputationCmd {
 		let cindex = get_ceremony_index(&api);
 		let account = get_accountid_from_str(&self.account);
 
-		if cindex < self.number_of_reputations {
+		if let Some((reputations, read_proofs)) = FetchReputationCmd::fetch_reputation(
+			&api,
+			cid,
+			cindex,
+			account.clone(),
+			self.number_of_reputations,
+		) {
+			let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
+			println!("reputation for {} is: {:#?}", account, reputations);
+			println!(
+				"verified reputatations number: {} out of:{}",
+				verified_reputations,
+				reputations.len()
+			);
+			println!("read proof is: {:#?}", read_proofs);
+		}
+	}
+
+	// FIXME: change to result once it is an RPC method
+	pub fn fetch_reputation(
+		api: &ParentchainApi,
+		cid: CommunityIdentifier,
+		cindex: CeremonyIndexType,
+		account: AccountId,
+		number_of_reputations: CeremonyIndexType,
+	) -> Option<ReputationsWithReadProofs> {
+		if cindex < number_of_reputations {
 			error!(
 				"current ceremony index is {}, can't fetch last {} ceremonies.",
-				cindex, self.number_of_reputations
+				cindex, number_of_reputations
 			);
-			return
+			return None
 		}
 
 		let reputations =
-			query_last_n_reputations(&api, &account, cid, cindex, self.number_of_reputations);
-		let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
+			query_last_n_reputations(&api, &account, cid, cindex, number_of_reputations);
 
-		let read_proofs = get_read_proofs(&api, &account, cid, cindex, self.number_of_reputations);
-
-		println!("reputation for {} is: {:#?}", account, reputations);
-		println!(
-			"verified reputatations number: {} out of:{}",
-			verified_reputations,
-			reputations.len()
-		);
-		println!("read proof is: {:#?}", read_proofs);
+		let read_proofs = get_read_proofs(&api, &account, cid, cindex, number_of_reputations);
+		Some((reputations, read_proofs))
 	}
 }
 
