@@ -6,6 +6,8 @@ edition = "2021"
 
 [workspace]
 members = []
+resolver = "2"
+
 
 [lib]
 name = "enclave_runtime"
@@ -28,6 +30,8 @@ teeracle = [
     "itp-settings/teeracle",
     "itp-top-pool-author/teeracle",
     "encointer-primitives",
+    "nostr",
+    "tungstenite_sgx",
 ]
 test = [
     "ita-stf/test",
@@ -70,6 +74,10 @@ ipfs-unixfs = { default-features = false, git = "https://github.com/whalelephant
 lazy_static = { version = "1.1.0", features = ["spin_no_std"] }
 primitive-types = { version = "0.12.1", default-features = false, features = ["codec", "serde_no_std"] }
 
+# nostr
+nostr = { default-features = false, optional = true, features = ["alloc", "nip19"], git = "https://github.com/OverOrion/nostr", branch = "no_std_upstream_working" }
+secp256k1 = { version = "0.24", default-features = false, features = ["alloc", "serde"] }
+tungstenite_sgx = { package = "tungstenite", optional = true, features = ["rustls-tls-webpki-roots"], git = "https://github.com/integritee-network/tungstenite-rs-sgx", branch = "sgx-experimental" }
 encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", default-features = false, optional = true, features = ["full_crypto"] }
 
 # scs / integritee

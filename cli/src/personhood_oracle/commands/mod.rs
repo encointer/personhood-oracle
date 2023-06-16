@@ -16,5 +16,6 @@
 */
 
 mod fetch_reputation;
+mod issue_nostr_badge;
 
-pub use self::fetch_reputation::FetchReputationCmd;
+pub use self::{fetch_reputation::FetchReputationCmd, issue_nostr_badge::IssueNostrBadgeCmd};

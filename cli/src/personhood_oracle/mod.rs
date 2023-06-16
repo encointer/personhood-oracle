@@ -16,7 +16,10 @@
 */
 
 use crate::{
-	personhood_oracle::{commands::FetchReputationCmd, PersonhoodOracleCommand::FetchReputation},
+	personhood_oracle::{
+		commands::{FetchReputationCmd, IssueNostrBadgeCmd},
+		PersonhoodOracleCommand::{FetchReputation, IssueNostrBadge},
+	},
 	Cli,
 };
 
@@ -26,12 +29,14 @@ mod commands;
 #[derive(Debug, clap::Subcommand)]
 pub enum PersonhoodOracleCommand {
 	FetchReputation(FetchReputationCmd),
+	IssueNostrBadge(IssueNostrBadgeCmd),
 }
 
 impl PersonhoodOracleCommand {
 	pub fn run(&self, cli: &Cli) {
 		match self {
 			FetchReputation(fetch_reputation_cmd) => fetch_reputation_cmd.run(&cli),
+			IssueNostrBadge(issue_nostr_badge_cmd) => issue_nostr_badge_cmd.run(&cli),
 		}
 	}
 }
