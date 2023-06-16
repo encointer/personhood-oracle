@@ -35,6 +35,12 @@ ENV CARGO_NET_GIT_FETCH_WITH_CLI true
 ARG SGX_MODE=SW
 ENV SGX_MODE=$SGX_MODE
 
+ARG SGX_PRODUCTION=0
+ENV SGX_PRODUCTION=$SGX_PRODUCTION
+
+ARG WORKER_FEATURES_ARG
+ENV WORKER_FEATURES=$WORKER_FEATURES_ARG
+
 ENV WORKHOME=/home/ubuntu/work
 ENV HOME=/home/ubuntu
 
@@ -52,19 +58,28 @@ ENV ADDITIONAL_FEATURES=$ADDITIONAL_FEATURES_ARG
 
 ARG FINGERPRINT=none
 
+ARG SGX_COMMERCIAL_KEY=enclave-runtime/Enclave_private.pem
+ENV SGX_COMMERCIAL_KEY ${SGX_COMMERCIAL_KEY}
+
+ARG SGX_PASSFILE
+ENV SGX_PASSFILE ${SGX_PASSFILE}
+
 WORKDIR $WORKHOME/worker
 
 COPY . .
 
-RUN --mount=type=cache,id=cargo-registry,target=/opt/rust/registry \
-    --mount=type=cache,id=cargo-git,target=/opt/rust/git/db \
+RUN --mount=type=cache,id=cargo-registry-cache,target=/opt/rust/registry/cache,sharing=private \
+	--mount=type=cache,id=cargo-registry-index,target=/opt/rust/registry/index,sharing=private \
+	--mount=type=cache,id=cargo-git,target=/opt/rust/git/db,sharing=private \
 	--mount=type=cache,id=cargo-sccache-${WORKER_MODE}${ADDITIONAL_FEATURES},target=/home/ubuntu/.cache/sccache \
-	echo ${FINGERPRINT} && make && cargo test --release && sccache --show-stats
+	echo ${FINGERPRINT} && make && make identity && cargo test --release && sccache --show-stats
 
 ### Base Runner Stage
 ### The runner needs the aesmd service for the `SGX_MODE=HW`.
 ######################################################
 FROM oasisprotocol/aesmd:master AS runner
+ENV SGX_SDK /opt/sgxsdk
+ENV LD_LIBRARY_PATH "${SGX_SDK}/sdk_libs"
 
 ### Deployed CLI client
 ##################################################
