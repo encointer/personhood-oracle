@@ -364,6 +364,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
+name = "bech32"
+version = "0.9.1"
+source = "git+https://github.com/rust-bitcoin/rust-bech32?rev=360af7e0647fa94bce892fa69f31c0ef02452b63#360af7e0647fa94bce892fa69f31c0ef02452b63"
+
+[[package]]
 name = "beef"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -414,6 +419,22 @@ name = "bit-vec"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
+
+[[package]]
+name = "bitcoin-private"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73290177011694f38ec25e165d0387ab7ea749a4b81cd4c80dae5988229f7a57"
+
+[[package]]
+name = "bitcoin_hashes"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d7066118b13d4b20b23645932dfb3a81ce7e29f95726c2036fa33cd7b092501"
+dependencies = [
+ "bitcoin-private",
+ "serde 1.0.164",
+]
 
 [[package]]
 name = "bitflags"
@@ -1104,6 +1125,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2e66c9d817f1720209181c316d28635c050fa304f9c79e47a520882661b7308"
 
 [[package]]
+name = "data-url"
+version = "0.2.0"
+source = "git+https://github.com/OverOrion/rust-url?branch=no_std_net#6d622abbe36a5f11ce83cdd2f9f47c5169901c74"
+
+[[package]]
 name = "der"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1716,6 +1742,14 @@ version = "3.0.0"
 dependencies = [
  "parity-scale-codec",
  "sgx_tstd",
+]
+
+[[package]]
+name = "form_urlencoded"
+version = "1.1.0"
+source = "git+https://github.com/OverOrion/rust-url?branch=no_std_net#6d622abbe36a5f11ce83cdd2f9f47c5169901c74"
+dependencies = [
+ "percent-encoding 2.2.0",
 ]
 
 [[package]]
@@ -2693,6 +2727,15 @@ dependencies = [
 
 [[package]]
 name = "idna"
+version = "0.3.0"
+source = "git+https://github.com/OverOrion/rust-url?branch=no_std_net#6d622abbe36a5f11ce83cdd2f9f47c5169901c74"
+dependencies = [
+ "unicode-bidi 0.3.13",
+ "unicode-normalization 0.1.22",
+]
+
+[[package]]
+name = "idna"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d20d6b07bfbc108882d88ed8e37d39636dcc260e15e30c45e6ba089610b917c"
@@ -2818,6 +2861,7 @@ dependencies = [
  "itp-types",
  "itp-utils",
  "log 0.4.19",
+ "nostr",
  "pallet-balances",
  "pallet-evm",
  "pallet-teerex",
@@ -4991,6 +5035,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "no-std-net"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43794a0ace135be66a25d3ae77d41b91615fb68ae937f904090203e81f755b65"
+
+[[package]]
 name = "nodrop"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5017,6 +5067,21 @@ name = "normalize-line-endings"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61807f77802ff30975e01f4f071c8ba10c022052f98b3294119f3e615d13e5be"
+
+[[package]]
+name = "nostr"
+version = "0.21.0"
+source = "git+https://github.com/OverOrion/nostr?branch=no_std_upstream_working#70c0fab0c38b98bc4f1fda92c1c3bf21162cf84a"
+dependencies = [
+ "bech32",
+ "bitcoin_hashes",
+ "log 0.4.19",
+ "rand 0.8.5",
+ "secp256k1 0.27.0",
+ "serde 1.0.164",
+ "serde_json 1.0.97",
+ "url 2.3.1",
+]
 
 [[package]]
 name = "num"
@@ -6026,6 +6091,11 @@ source = "git+https://github.com/mesalock-linux/rust-url-sgx?tag=sgx_1.1.3#23832
 
 [[package]]
 name = "percent-encoding"
+version = "2.2.0"
+source = "git+https://github.com/OverOrion/rust-url?branch=no_std_net#6d622abbe36a5f11ce83cdd2f9f47c5169901c74"
+
+[[package]]
+name = "percent-encoding"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b2a4787296e9989611394c33f193f676704af1686e70b8f8033ab5ba9a35a94"
@@ -7007,7 +7077,18 @@ version = "0.24.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b1629c9c557ef9b293568b338dddfc8208c98a18c59d722a9d53f859d9c9b62"
 dependencies = [
- "secp256k1-sys",
+ "secp256k1-sys 0.6.1",
+]
+
+[[package]]
+name = "secp256k1"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25996b82292a7a57ed3508f052cfff8640d38d32018784acd714758b43da9c8f"
+dependencies = [
+ "rand 0.8.5",
+ "secp256k1-sys 0.8.1",
+ "serde 1.0.164",
 ]
 
 [[package]]
@@ -7015,6 +7096,15 @@ name = "secp256k1-sys"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83080e2c2fc1006e625be82e5d1eb6a43b7fd9578b617fcc55814daf286bba4b"
+dependencies = [
+ "cc",
+]
+
+[[package]]
+name = "secp256k1-sys"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70a129b9e9efbfb223753b9163c4ab3b13cff7fd9c7f010fbac25ab4099fa07e"
 dependencies = [
  "cc",
 ]
@@ -7200,7 +7290,7 @@ version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
 dependencies = [
- "form_urlencoded",
+ "form_urlencoded 1.2.0",
  "itoa 1.0.6",
  "ryu",
  "serde 1.0.164",
@@ -7764,7 +7854,7 @@ dependencies = [
  "regex 1.8.4",
  "scale-info",
  "schnorrkel",
- "secp256k1",
+ "secp256k1 0.24.3",
  "secrecy",
  "serde 1.0.164",
  "sp-core-hashing",
@@ -7877,7 +7967,7 @@ dependencies = [
  "log 0.4.19",
  "parity-scale-codec",
  "rustversion",
- "secp256k1",
+ "secp256k1 0.24.3",
  "sp-core",
  "sp-externalities",
  "sp-keystore",
@@ -9080,11 +9170,23 @@ dependencies = [
 
 [[package]]
 name = "url"
+version = "2.3.1"
+source = "git+https://github.com/OverOrion/rust-url?branch=no_std_net#6d622abbe36a5f11ce83cdd2f9f47c5169901c74"
+dependencies = [
+ "data-url",
+ "form_urlencoded 1.1.0",
+ "idna 0.3.0",
+ "no-std-net",
+ "percent-encoding 2.2.0",
+]
+
+[[package]]
+name = "url"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50bff7831e19200a85b17131d085c25d7811bc4e186efdaf54bbd132994a88cb"
 dependencies = [
- "form_urlencoded",
+ "form_urlencoded 1.2.0",
  "idna 0.4.0",
  "percent-encoding 2.3.0",
 ]

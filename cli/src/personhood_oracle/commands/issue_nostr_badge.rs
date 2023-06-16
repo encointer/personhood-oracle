@@ -25,6 +25,8 @@ use my_node_runtime::AccountId;
 use std::str::FromStr;
 use substrate_api_client::{GetStorage, ReadProof};
 
+//use nostr::nips::nip58;
+
 #[derive(Debug, Clone, Parser)]
 pub struct IssueNostrBadgeCmd {
 	pub account: String,
@@ -37,4 +39,7 @@ impl IssueNostrBadgeCmd {
 	pub fn run(&self, cli: &Cli) {
 		let _api = get_chain_api(&cli);
 	}
+	//fn create_badge_def() -> BadgeDefinition {}
+	//fn create_badge_award() -> BadgeAward {}
+	//fn create_badge() -> Option<nip58::ProfileBadgesEvent> {}
 }
