@@ -22,6 +22,9 @@ use clap::Subcommand;
 #[cfg(feature = "teeracle")]
 use crate::oracle::OracleCommand;
 
+#[cfg(feature = "teeracle")]
+use crate::personhood_oracle::PersonhoodOracleCommand;
+
 use crate::attesteer::AttesteerCommand;
 
 #[derive(Subcommand)]
@@ -41,6 +44,11 @@ pub enum Commands {
 	/// Subcommand for the attesteer.
 	#[clap(subcommand)]
 	Attesteer(AttesteerCommand),
+
+	/// Subcommand for the personhood oracle.
+	#[cfg(feature = "teeracle")]
+	#[clap(subcommand)]
+	PersonhoodOracle(PersonhoodOracleCommand),
 }
 
 pub fn match_command(cli: &Cli) -> CliResult {
@@ -53,6 +61,11 @@ pub fn match_command(cli: &Cli) -> CliResult {
 			Ok(CliResultOk::None)
 		},
 		Commands::Attesteer(cmd) => {
+			cmd.run(cli);
+			Ok(CliResultOk::None)
+		},
+		#[cfg(feature = "teeracle")]
+		Commands::PersonhoodOracle(cmd) => {
 			cmd.run(cli);
 			Ok(CliResultOk::None)
 		},

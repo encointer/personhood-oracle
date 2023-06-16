@@ -17,14 +17,17 @@
 
 use crate::{error::ServiceResult, teeracle::schedule_periodic::schedule_periodic};
 use codec::{Decode, Encode};
+use encointer_primitives::{
+	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
+};
 use itp_enclave_api::teeracle_api::TeeracleApi;
 use itp_node_api::api_client::ParentchainApi;
-use itp_types::parentchain::Hash;
+use itp_types::parentchain::{AccountId, Hash};
 use itp_utils::hex::hex_encode;
 use log::*;
 use sp_runtime::OpaqueExtrinsic;
 use std::time::Duration;
-use substrate_api_client::{SubmitAndWatch, XtStatus};
+use substrate_api_client::{GetStorage, SubmitAndWatch, XtStatus};
 use teeracle_metrics::{increment_number_of_request_failures, set_extrinsics_inclusion_success};
 use tokio::runtime::Handle;
 

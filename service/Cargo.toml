@@ -66,6 +66,8 @@ sgx-verify = { git = "https://github.com/integritee-network/pallets.git", branch
 substrate-api-client = { default-features = false, features = ["std", "ws-client"], git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
 teerex-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
 
+encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", default-features = false, optional = true, features = ["full_crypto"] }
+
 # Substrate dependencies
 frame-support = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 frame-system = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -81,7 +83,7 @@ evm = []
 sidechain = ["itp-settings/sidechain"]
 offchain-worker = ["itp-settings/offchain-worker"]
 production = ["itp-settings/production"]
-teeracle = ["itp-settings/teeracle"]
+teeracle = ["itp-settings/teeracle", "encointer-primitives"]
 dcap = []
 attesteer = []
 
