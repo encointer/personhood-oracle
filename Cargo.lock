@@ -2857,6 +2857,7 @@ dependencies = [
  "itp-rpc",
  "itp-sgx-crypto",
  "itp-stf-primitives",
+ "itp-storage",
  "itp-time-utils",
  "itp-types",
  "itp-utils",
@@ -2882,6 +2883,7 @@ dependencies = [
  "substrate-client-keystore",
  "teerex-primitives",
  "thiserror 1.0.40",
+ "tungstenite 0.15.0",
  "ws",
 ]
 
@@ -5071,7 +5073,7 @@ checksum = "61807f77802ff30975e01f4f071c8ba10c022052f98b3294119f3e615d13e5be"
 [[package]]
 name = "nostr"
 version = "0.21.0"
-source = "git+https://github.com/OverOrion/nostr?branch=no_std_upstream_working#0bc2087214c367903fa6143441b725480ddd94ee"
+source = "git+https://github.com/OverOrion/nostr?branch=no_std_upstream_working#cd30fdedf1e48fc191f7e2e5d22e16d82adccd84"
 dependencies = [
  "bech32",
  "bitcoin_hashes",

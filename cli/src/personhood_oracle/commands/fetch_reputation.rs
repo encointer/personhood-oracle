@@ -19,9 +19,11 @@ use encointer_primitives::{
 	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
 };
 use itp_node_api::api_client::ParentchainApi;
+use itp_storage::{StorageHasher, StorageProof, StorageProofChecker};
 use itp_types::H256;
 use log::error;
 use my_node_runtime::AccountId;
+use sp_runtime::traits::BlakeTwo256;
 use std::str::FromStr;
 use substrate_api_client::{GetStorage, ReadProof};
 
@@ -76,29 +78,46 @@ impl FetchReputationCmd {
 			return None
 		}
 
+		// TODO fetch the storage item instead, to have builtin readproof validation.
 		let reputations =
 			query_last_n_reputations(&api, &account, cid, cindex, number_of_reputations);
 
 		let read_proofs = get_read_proofs(&api, &account, cid, cindex, number_of_reputations);
+		// TODO add validation here as a new function
+		//validate_reputations(read_proofs.clone(), cid, cindex, account);
 		Some((reputations, read_proofs))
 	}
 
 	pub fn validate_reputations(
 		proofs: &Vec<StorageProof>,
 		blocks_merkle_roots: &Vec<sp_core::H256>,
-	) -> Result<()> {
-		info!(
-			"Validating events, events_proofs_length: {:?}, blocks_merkle_roots_lengths: {:?}",
-			events_proofs.len(),
-			blocks_merkle_roots.len()
-		);
-
+		cid: CommunityIdentifier,
+		cindex: CeremonyIndexType,
+		prover: &AccountId,
+	) {
 		if proofs.len() != blocks_merkle_roots.len() {
-			return Err(Error::ParentChainSync)
+			//return Err(Error::ParentChainSync)
+			panic!("length mismatch");
 		}
 
-		// let reputations_key
-		todo!()
+		let reputations_key = itp_storage::storage_double_map_key(
+			"EncointerCeremonies",
+			"ParticipantReputation",
+			&(cid, cindex),
+			&StorageHasher::Blake2_128Concat,
+			&prover,
+			&StorageHasher::Blake2_128Concat,
+		);
+
+		for (proof, root) in proofs.iter().zip(blocks_merkle_roots.iter()) {
+			StorageProofChecker::<BlakeTwo256>::check_proof(
+				*root,
+				reputations_key.as_slice(),
+				proof.clone(),
+			)
+			.unwrap()
+			.unwrap();
+		}
 	}
 }
 
@@ -108,6 +127,7 @@ fn get_reputation(
 	cid: CommunityIdentifier,
 	cindex: CeremonyIndexType,
 ) -> Reputation {
+	println!("cid is :{}, cindex is: {}", cid.clone(), cindex.clone());
 	api.get_storage_double_map(
 		"EncointerCeremonies",
 		"ParticipantReputation",
@@ -120,7 +140,7 @@ fn get_reputation(
 	.unwrap()
 }
 
-fn get_ceremony_index(api: &ParentchainApi) -> CeremonyIndexType {
+pub(crate) fn get_ceremony_index(api: &ParentchainApi) -> CeremonyIndexType {
 	api.get_storage_value("EncointerScheduler", "CurrentCeremonyIndex", None)
 		.unwrap()
 		.unwrap()
@@ -133,7 +153,7 @@ fn query_last_n_reputations(
 	current_cindex: CeremonyIndexType,
 	n: CeremonyIndexType,
 ) -> Vec<Reputation> {
-	(0..n)
+	(1..=n)
 		.map(|i| get_reputation(api, prover, cid.clone(), current_cindex - i))
 		.collect()
 }
@@ -145,7 +165,7 @@ fn get_read_proofs(
 	current_cindex: CeremonyIndexType,
 	n: CeremonyIndexType,
 ) -> Vec<substrate_api_client::api::error::Result<Option<ReadProof<H256>>>> {
-	(0..=n)
+	(1..=n)
 		.map(|i| {
 			api.get_storage_double_map_proof(
 				"EncointerCeremonies",

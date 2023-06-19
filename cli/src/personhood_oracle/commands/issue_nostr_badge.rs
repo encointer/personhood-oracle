@@ -16,7 +16,8 @@ use crate::{
 	Cli,
 };
 use encointer_primitives::{
-	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
+	ceremonies::Reputation, communities::CommunityIdentifier,
+	reputation_commitments::DescriptorType, scheduler::CeremonyIndexType,
 };
 use itp_node_api::api_client::ParentchainApi;
 use itp_types::H256;
@@ -25,15 +26,17 @@ use my_node_runtime::AccountId;
 use std::str::FromStr;
 use substrate_api_client::{GetStorage, ReadProof};
 
+use crate::personhood_oracle::FetchReputationCmd;
 use itp_time_utils::{duration_now, now_as_secs, Duration};
 use nostr::{
+	key::FromSkStr,
 	nips::{
 		nip58,
-		nip58::{BadgeAward, BadgeDefinition},
+		nip58::{BadgeAward, BadgeDefinition, ImageDimensions},
 	},
 	prelude::{FromBech32, Secp256k1, XOnlyPublicKey},
 	types::time::TimeSupplier,
-	Keys, Tag, Timestamp,
+	Event, Keys, Tag, Timestamp,
 };
 #[derive(Debug, Clone, Parser)]
 pub struct IssueNostrBadgeCmd {
@@ -41,16 +44,52 @@ pub struct IssueNostrBadgeCmd {
 	pub nostr_pub_key: String,
 	pub cid: String,
 	pub number_of_reputations: CeremonyIndexType,
+	pub relay: String,
+	// TODO add proofs
+	// pub proofs: Vec<ProofOfAttendance>
 }
+
+use crate::personhood_oracle::commands::fetch_reputation::get_ceremony_index;
 
 impl IssueNostrBadgeCmd {
 	pub fn run(&self, cli: &Cli) {
-		let _api = get_chain_api(&cli);
+		let api = get_chain_api(&cli);
+		let cid = CommunityIdentifier::from_str(&self.cid).unwrap();
+		let cindex = get_ceremony_index(&api);
+		let account = get_accountid_from_str(&self.account);
 
-		let badge_def = IssueNostrBadgeCmd::create_badge_def();
+		if let Some((reputations, read_proofs)) = FetchReputationCmd::fetch_reputation(
+			&api,
+			cid,
+			cindex,
+			account.clone(),
+			self.number_of_reputations,
+		) {
+			let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
+			println!("reputation for {} is: {:#?}", account, reputations);
+			println!(
+				"verified reputatations number: {} out of:{}",
+				verified_reputations,
+				reputations.len()
+			);
+			println!("read proof is: {:#?}", read_proofs);
+			// At this point the following should be true:
+			// The reputatuion is valid and
+			// The reputatuion has been proof read and
+			let badge_def = IssueNostrBadgeCmd::create_badge_def();
 
-		let nostr_pub_key = XOnlyPublicKey::from_bech32(&self.nostr_pub_key).unwrap();
-		let award = IssueNostrBadgeCmd::create_badge_award(badge_def, nostr_pub_key);
+			let nostr_pub_key = XOnlyPublicKey::from_bech32(&self.nostr_pub_key).unwrap();
+			let award = IssueNostrBadgeCmd::create_badge_award(badge_def.clone(), nostr_pub_key);
+
+			let badge_def = badge_def.into_event();
+			let mut award = award.into_event();
+
+			println!("badge_def struct is: {:#?}", badge_def.clone());
+			println!("badge_def as json: {:#?}", badge_def.clone().as_json());
+
+			Self::send_nostr_events(vec![badge_def, award], &self.relay)
+			// The reputation is consumed for this purpose HERE, after the nostr badge has been issued successfully.
+		}
 	}
 
 	// Utility functions, will be moved
@@ -67,10 +106,35 @@ impl IssueNostrBadgeCmd {
 	}
 	fn create_badge_def() -> BadgeDefinition {
 		// Just for demo purposes, should be reworked
-		let builder = nip58::BadgeDefinitionBuilder::new("likely_person".to_owned());
+		let mut builder = nip58::BadgeDefinitionBuilder::new("likely_person".to_owned());
+		let thumb_size = ImageDimensions(181, 151);
+		let thumbs = vec![
+			(
+				"https://parachains.info/images/parachains/1625163231_encointer_logo.png"
+					.to_owned(),
+				Some(thumb_size),
+			),
+			(
+				"https://parachains.info/images/parachains/1625163231_encointer_logo.png"
+					.to_owned(),
+				None,
+			),
+		];
+		let builder = builder
+			.image(
+				"https://parachains.info/images/parachains/1625163231_encointer_logo.png"
+					.to_owned(),
+			)
+			.thumbs(thumbs)
+			.image_dimensions(ImageDimensions(181, 151));
 
 		let secp = Secp256k1::new();
-		let keys = Keys::generate_with_secp(&secp);
+		//let keys = Keys::generate_with_secp(&secp);\
+		let keys = Keys::from_sk_str(
+			"nsec13wqyx0syeu7unce6d7p8x4rqqe7elpfpr9ywsl5y6x427dzj8tyq36ku2r",
+			&secp,
+		)
+		.unwrap();
 		let ts = IssueNostrBadgeCmd::get_ts();
 		let def = builder.build(&keys, ts, &secp).unwrap();
 		def
@@ -91,6 +155,52 @@ impl IssueNostrBadgeCmd {
 		award
 	}
 	//fn create_badge() -> Option<nip58::ProfileBadgesEvent> {}
+
+	fn send_nostr_events(events_to_send: Vec<Event>, relay: &str) {
+		use nostr::prelude::*;
+		//use tungstenite_sgx as tungstenite;
+
+		use log::info;
+		use nostr::{
+			key::FromSkStr,
+			nips::nip19::ToBech32,
+			types::{Metadata as NostrMetadata, Timestamp as NostrTimestamp},
+			ChannelId, ClientMessage, EventBuilder, EventId, Keys,
+		};
+
+		use tungstenite::Message as WsMessage;
+
+		let secp = Secp256k1::new();
+
+		// or use your already existing
+		//
+		// From HEX or Bech32
+		let my_keys = Keys::from_sk_str(
+			"nsec13wqyx0syeu7unce6d7p8x4rqqe7elpfpr9ywsl5y6x427dzj8tyq36ku2r",
+			&secp,
+		)
+		.unwrap();
+
+		// Show bech32 public key
+		let bech32_pubkey: String = my_keys.public_key().to_bech32().unwrap();
+		println!("Bech32 PubKey: {}", bech32_pubkey);
+		println!("Secret key: {}", my_keys.secret_key().unwrap().to_bech32().unwrap());
+
+		// Connect to relay
+		let (mut socket, response) =
+			//tungstenite::connect("wss://nostr.lu.ke").expect("Can't connect to relay");
+            tungstenite::connect(relay).expect("Can't connect to relay");
+
+		println!("response is: {:#?}", &response);
+		println!("socket is: {:#?}", &socket);
+
+		for event in events_to_send {
+			println!("sending text message with id {}", event.id.to_bech32().unwrap());
+
+			let msg = ClientMessage::new_event(event).as_json();
+			socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
+		}
+	}
 }
 
 struct DemoTimeSupplier {}

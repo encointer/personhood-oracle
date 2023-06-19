@@ -15,6 +15,7 @@
 
 */
 
+use super::nostr_utils::get_ts;
 use crate::{
 	attestation::{
 		generate_dcap_ra_extrinsic_from_quote_internal,
@@ -23,19 +24,31 @@ use crate::{
 	utils::get_validator_accessor_from_solo_or_parachain,
 };
 use codec::Encode;
-use core::result::Result;
+use core::{result::Result, str::FromStr};
+use encointer_primitives::{communities::CommunityIdentifier, scheduler::CeremonyIndexType};
 use ita_sgx_runtime::Runtime;
 use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, ExtrinsicSender};
 use itp_primitives_cache::{GetPrimitives, GLOBAL_PRIMITIVES_CACHE};
 use itp_rpc::RpcReturnValue;
 use itp_sgx_crypto::key_repository::AccessPubkey;
 use itp_stf_executor::getter_executor::ExecuteGetter;
+use itp_stf_primitives::types::AccountId;
 use itp_top_pool_author::traits::AuthorApi;
 use itp_types::{DirectRequestStatus, Request, ShardIdentifier, H256};
 use itp_utils::{FromHexPrefixed, ToHexPrefixed};
 use its_primitives::types::block::SignedBlock;
 use its_sidechain::rpc_handler::{direct_top_pool_api, import_block_api};
 use jsonrpc_core::{serde_json::json, IoHandler, Params, Value};
+use nostr::{
+	key::FromSkStr,
+	nips::{
+		nip58,
+		nip58::{BadgeAward, BadgeDefinition, ImageDimensions},
+	},
+	prelude::{FromBech32, Secp256k1, XOnlyPublicKey},
+	types::time::TimeSupplier,
+	Event, Keys, Tag, Timestamp,
+};
 use sgx_crypto_helper::rsa3072::Rsa3072PubKey;
 use sp_runtime::OpaqueExtrinsic;
 use std::{borrow::ToOwned, format, str, string::String, sync::Arc, vec::Vec};
@@ -190,6 +203,22 @@ where
 		Ok(json!(json_value))
 	});
 
+	// personhoodoracle_issueNostrBadge
+	let personhoodoracle_issue_nostr_badge: &str = "personhoodoracle_issueNostrBadge";
+	io.add_sync_method(personhoodoracle_issue_nostr_badge, move |params: Params| {
+		let json_value = match issue_nostr_badge_inner(params) {
+			Ok(val) => RpcReturnValue {
+				do_watch: false,
+				value: val.encode(),
+				status: DirectRequestStatus::Ok,
+			}
+			.to_hex(),
+			Err(error) => compute_hex_encoded_return_error(error.as_str()),
+		};
+
+		Ok(json!(json_value))
+	});
+
 	// system_health
 	let state_health_name: &str = "system_health";
 	io.add_sync_method(state_health_name, |_: Params| {
@@ -291,6 +320,102 @@ fn attesteer_forward_ias_attestation_report_inner(
 		.unwrap();
 
 	Ok(ext)
+}
+
+fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
+	let hex_encoded_params = params.parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
+
+	if hex_encoded_params.len() != 5 {
+		return Err(format!(
+			"Wrong number of arguments for Nostr badge request: {}, expected: {}",
+			hex_encoded_params.len(),
+			5
+		))
+	}
+	let cid = itp_utils::hex::decode_hex(&hex_encoded_params[0]).map_err(|e| format!("{:?}", e))?;
+	let cid = str::from_utf8(&cid).expect("cid should be a valid str value");
+	let cid: CommunityIdentifier =
+		CommunityIdentifier::from_str(cid).map_err(|e| format!("{:?}", e))?;
+
+	let cindex =
+		itp_utils::hex::decode_hex(&hex_encoded_params[1]).map_err(|e| format!("{:?}", e))?;
+	let cindex = str::from_utf8(&cindex).expect("cindex should be a valid str value");
+	let cindex = u32::from_str_radix(&cindex, 10).expect("cid should be a valid integer value");
+
+	let account =
+		itp_utils::hex::decode_hex(&hex_encoded_params[2]).map_err(|e| format!("{:?}", e))?;
+	if account.len() != 32 {
+		return Err(format!("AccountId size is incorrect: {}, expected: {}", account.len(), 32))
+	}
+	let account: &[u8; 32] = account
+		.as_slice()
+		.try_into()
+		.expect("Account vector size does not match the expected slice size.");
+
+	let account = AccountId::from(account.clone());
+
+	let nostr_pub_key =
+		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
+	let nostr_pub_key =
+		str::from_utf8(&nostr_pub_key).expect("nostr_pub_key should be a valid str value");
+
+	let nostr_pub_key = XOnlyPublicKey::from_bech32(nostr_pub_key)
+		.expect("Nostr public key is not in bech32 format");
+
+	let nostr_relay_url =
+		itp_utils::hex::decode_hex(&hex_encoded_params[4]).map_err(|e| format!("{:?}", e))?;
+	let nostr_relay_url =
+		str::from_utf8(&nostr_relay_url).expect("nostr_relay_url should be a valid str value");
+
+	let badge_def = create_nostr_badge_definition();
+	let award = create_nostr_badge_award(badge_def.clone(), nostr_pub_key);
+
+	Ok(())
+}
+
+fn create_nostr_badge_award(
+	badge_definition: BadgeDefinition,
+	awarded_pub_key: XOnlyPublicKey,
+) -> BadgeAward {
+	let badge_definition_event = badge_definition.into_event();
+	let awarded_keys = vec![Tag::PubKey(awarded_pub_key, None)];
+
+	let secp = Secp256k1::new();
+	let keys = Keys::generate_with_secp(&secp);
+	let ts = get_ts();
+
+	let award =
+		nip58::BadgeAward::new(&badge_definition_event, awarded_keys, &keys, ts, &secp).unwrap();
+	award
+}
+
+fn create_nostr_badge_definition() -> BadgeDefinition {
+	// Just for demo purposes, should be reworked
+	let mut builder = nip58::BadgeDefinitionBuilder::new("likely_person".to_owned());
+	let thumb_size = ImageDimensions(181, 151);
+	let thumbs = vec![
+		(
+			"https://parachains.info/images/parachains/1625163231_encointer_logo.png".to_owned(),
+			Some(thumb_size),
+		),
+		(
+			"https://parachains.info/images/parachains/1625163231_encointer_logo.png".to_owned(),
+			None,
+		),
+	];
+	let builder = builder
+		.image("https://parachains.info/images/parachains/1625163231_encointer_logo.png".to_owned())
+		.thumbs(thumbs)
+		.image_dimensions(ImageDimensions(181, 151));
+
+	let secp = Secp256k1::new();
+	//let keys = Keys::generate_with_secp(&secp);\
+	let keys =
+		Keys::from_sk_str("nsec13wqyx0syeu7unce6d7p8x4rqqe7elpfpr9ywsl5y6x427dzj8tyq36ku2r", &secp)
+			.unwrap();
+	let ts = get_ts();
+	let def = builder.build(&keys, ts, &secp).unwrap();
+	def
 }
 
 pub fn sidechain_io_handler<ImportFn, Error>(import_fn: ImportFn) -> IoHandler

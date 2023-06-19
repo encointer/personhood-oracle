@@ -36,6 +36,7 @@ teerex-primitives = { git = "https://github.com/integritee-network/pallets.git",
 encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", features = ["full_crypto"] }
 # TEMP
 nostr = { default-features = false, features = ["alloc", "nip19"], git = "https://github.com/OverOrion/nostr", branch = "no_std_upstream_working" }
+tungstenite = { version = "0.15.0", features = ["rustls-tls-webpki-roots"] }
 
 # substrate dependencies
 frame-system = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -57,6 +58,7 @@ itp-stf-primitives = { path = "../core-primitives/stf-primitives" }
 itp-time-utils = { path = "../core-primitives/time-utils" }
 itp-types = { path = "../core-primitives/types" }
 itp-utils = { path = "../core-primitives/utils" }
+itp-storage = { path = "../core-primitives/storage" }
 
 [features]
 default = []

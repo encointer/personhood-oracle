@@ -2842,7 +2842,7 @@ checksum = "43794a0ace135be66a25d3ae77d41b91615fb68ae937f904090203e81f755b65"
 [[package]]
 name = "nostr"
 version = "0.21.0"
-source = "git+https://github.com/OverOrion/nostr?branch=no_std_upstream_working#70c0fab0c38b98bc4f1fda92c1c3bf21162cf84a"
+source = "git+https://github.com/OverOrion/nostr?branch=no_std_upstream_working#cd30fdedf1e48fc191f7e2e5d22e16d82adccd84"
 dependencies = [
  "bech32",
  "bitcoin_hashes",
