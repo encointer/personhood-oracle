@@ -24,7 +24,7 @@ compile_error!("feature \"std\" and feature \"sgx\" cannot be enabled at the sam
 #[cfg(all(not(feature = "std"), feature = "sgx"))]
 extern crate sgx_tstd as std;
 
-use std::time::{Duration, SystemTime};
+pub use std::time::{Duration, SystemTime};
 
 /// Returns the current timestamp based on the unix epoch in seconds.
 pub fn now_as_secs() -> u64 {

@@ -82,6 +82,24 @@ impl FetchReputationCmd {
 		let read_proofs = get_read_proofs(&api, &account, cid, cindex, number_of_reputations);
 		Some((reputations, read_proofs))
 	}
+
+	pub fn validate_reputations(
+		proofs: &Vec<StorageProof>,
+		blocks_merkle_roots: &Vec<sp_core::H256>,
+	) -> Result<()> {
+		info!(
+			"Validating events, events_proofs_length: {:?}, blocks_merkle_roots_lengths: {:?}",
+			events_proofs.len(),
+			blocks_merkle_roots.len()
+		);
+
+		if proofs.len() != blocks_merkle_roots.len() {
+			return Err(Error::ParentChainSync)
+		}
+
+		// let reputations_key
+		todo!()
+	}
 }
 
 fn get_reputation(
