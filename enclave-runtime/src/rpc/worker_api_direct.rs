@@ -15,12 +15,12 @@
 
 */
 
-use super::nostr_utils::get_ts;
 use crate::{
 	attestation::{
 		generate_dcap_ra_extrinsic_from_quote_internal,
 		generate_ias_ra_extrinsic_from_der_cert_internal,
 	},
+	rpc::nostr_utils::{get_ts, send_nostr_events},
 	utils::get_validator_accessor_from_solo_or_parachain,
 };
 use codec::Encode;
@@ -369,6 +369,11 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 
 	let badge_def = create_nostr_badge_definition();
 	let award = create_nostr_badge_award(badge_def.clone(), nostr_pub_key);
+
+	let badge_def = badge_def.into_event();
+	let award = award.into_event();
+
+	send_nostr_events(vec![badge_def, award], &nostr_relay_url);
 
 	Ok(())
 }
