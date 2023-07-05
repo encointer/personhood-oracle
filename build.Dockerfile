@@ -45,11 +45,6 @@ ENV WORKHOME=/home/ubuntu/work
 ENV HOME=/home/ubuntu
 
 RUN rustup default stable 
-RUN cargo install sccache
-
-ENV SCCACHE_CACHE_SIZE="20G"
-ENV SCCACHE_DIR=$HOME/.cache/sccache
-ENV RUSTC_WRAPPER="/opt/rust/bin/sccache"
 
 ARG WORKER_MODE_ARG
 ARG ADDITIONAL_FEATURES_ARG
@@ -72,7 +67,7 @@ RUN --mount=type=cache,id=cargo-registry-cache,target=/opt/rust/registry/cache,s
 	--mount=type=cache,id=cargo-registry-index,target=/opt/rust/registry/index,sharing=private \
 	--mount=type=cache,id=cargo-git,target=/opt/rust/git/db,sharing=private \
 	--mount=type=cache,id=cargo-sccache-${WORKER_MODE}${ADDITIONAL_FEATURES},target=/home/ubuntu/.cache/sccache \
-	echo ${FINGERPRINT} && make && make identity && cargo test --release && sccache --show-stats
+	echo ${FINGERPRINT} && make && make identity && cargo test --release
 
 ### Base Runner Stage
 ### The runner needs the aesmd service for the `SGX_MODE=HW`.
