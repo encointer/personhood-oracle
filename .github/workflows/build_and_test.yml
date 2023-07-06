@@ -193,11 +193,6 @@ jobs:
             demo_name: demo-teeracle-generic
             host: ubuntu-latest
             sgx_mode: SW
-          - test: Benchmark
-            flavor_id: sidechain
-            demo_name: sidechain-benchmark
-            host: ubuntu-latest
-            sgx_mode: SW
 
 
     steps:
