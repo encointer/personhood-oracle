@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - main
       - 'sdk-v[0-9]+.[0-9]+.[0-9]+-*'
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   pull_request:
     branches:
-      - master
+      - main
       - 'sdk-v[0-9]+.[0-9]+.[0-9]+-*'
 
 env:
@@ -33,23 +33,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - flavor_id: sidechain
-            mode: sidechain
-            host: integritee-builder-sgx
-            sgx_mode: HW
           - flavor_id: offchain-worker
             mode: offchain-worker
-            host: integritee-builder-sgx
-            sgx_mode: HW
+            host: ubuntu-latest
+            sgx_mode: SW
           - flavor_id: teeracle
             mode: teeracle
-            host: integritee-builder-sgx
-            sgx_mode: HW
-          - flavor_id: sidechain-evm
-            mode: sidechain
-            additional_features: evm
-            host: integritee-builder-sgx
-            sgx_mode: HW
+            host: ubuntu-latest
+            sgx_mode: SW
 
     steps:
       - uses: actions/checkout@v3
@@ -87,7 +78,7 @@ jobs:
         run: >
           docker build -t integritee-cli-client-${{ matrix.flavor_id }}-${{ github.sha }}
           --target deployed-client
-          --build-arg WORKER_MODE_ARG=${{ matrix.mode }} --build-arg ADDITIONAL_FEATURES_ARG=${{ matrix.additional_features }}
+          --build-arg WORKER_MODE_ARG=${{ matrix.mode }} --build-arg FINGERPRINT=${FINGERPRINT} --build-arg ADDITIONAL_FEATURES_ARG=${{ matrix.additional_features }}
           -f build.Dockerfile .
 
       - run: docker images --all
@@ -135,16 +126,6 @@ jobs:
         run: cargo clippy -- -D warnings
       - name: Enclave # Enclave is separate as it's not in the workspace
         run: cd enclave-runtime && cargo clippy -- -D warnings
-
-      - name: Clippy with EVM feature
-        run: |
-          cargo clippy --features evm -- -D warnings
-          cd enclave-runtime && cargo clippy --features evm -- -D warnings
-
-      - name: Clippy with Sidechain feature
-        run: |
-          cargo clippy --features sidechain -- -D warnings
-          cd enclave-runtime && cargo clippy --features sidechain -- -D warnings
 
       - name: Clippy with Teeracle feature
         run: |
@@ -198,45 +179,21 @@ jobs:
       matrix:
         include:
           - test: M6
-            flavor_id: sidechain
-            demo_name: demo-indirect-invocation
-            host: test-runner-sgx
-            sgx_mode: HW
-          - test: M8
-            flavor_id: sidechain
-            demo_name: demo-direct-call
-            host: test-runner-sgx
-            sgx_mode: HW
-          - test: Sidechain
-            flavor_id: sidechain
-            demo_name: demo-sidechain
-            host: test-runner-sgx
-            sgx_mode: HW
-          - test: M6
             flavor_id: offchain-worker
             demo_name: demo-indirect-invocation
-            host: test-runner-sgx
-            sgx_mode: HW
+            host: ubuntu-latest
+            sgx_mode: SW
           - test: Teeracle
             flavor_id: teeracle
             demo_name: demo-teeracle
-            host: test-runner-sgx
-            sgx_mode: HW
+            host: ubuntu-latest
+            sgx_mode: SW
           - test: Teeracle
             flavor_id: teeracle
             demo_name: demo-teeracle-generic
-            host: test-runner-sgx
-            sgx_mode: HW
-          - test: Benchmark
-            flavor_id: sidechain
-            demo_name: sidechain-benchmark
-            host: test-runner-sgx
-            sgx_mode: HW
-          - test: EVM
-            flavor_id: sidechain-evm
-            demo_name: demo-smart-contract
-            host: test-runner-sgx
-            sgx_mode: HW
+            host: ubuntu-latest
+            sgx_mode: SW
+
 
     steps:
       - uses: actions/checkout@v3
@@ -248,7 +205,7 @@ jobs:
           echo "PROJECT=${{ matrix.flavor_id }}-${{ matrix.demo_name }}" >> $GITHUB_ENV
           echo "VERSION=dev.$version" >> $GITHUB_ENV
           echo "WORKER_IMAGE_TAG=integritee-worker:dev.$version" >> $GITHUB_ENV
-          echo "INTEGRITEE_NODE=integritee-node-dev-ias:1.0.36.$version" >> $GITHUB_ENV
+          echo "INTEGRITEE_NODE=integritee-node-dev:1.0.36.$version" >> $GITHUB_ENV
           echo "CLIENT_IMAGE_TAG=integritee-cli:dev.$version" >> $GITHUB_ENV
           if [[ ${{ matrix.sgx_mode }} == 'HW' ]]; then
              echo "SGX_PROVISION=/dev/sgx/provision" >> $GITHUB_ENV
@@ -292,8 +249,8 @@ jobs:
           fi
           docker tag integritee-worker-${{ matrix.flavor_id }}-${{ github.sha }} ${{ env.WORKER_IMAGE_TAG }}
           docker tag integritee-cli-client-${{ matrix.flavor_id }}-${{ github.sha }} ${{ env.CLIENT_IMAGE_TAG }}
-          docker pull integritee/integritee-node-dev-ias:1.0.36
-          docker tag integritee/integritee-node-dev-ias:1.0.36 ${{ env.INTEGRITEE_NODE }}
+          docker pull integritee/integritee-node-dev:1.0.36
+          docker tag integritee/integritee-node-dev:1.0.36 ${{ env.INTEGRITEE_NODE }}
           docker images --all
 
       ##
@@ -366,7 +323,7 @@ jobs:
         include:
           - flavor_id: teeracle
             mode: teeracle
-            sgx_mode: HW
+            sgx_mode: SW
             worker_features: dcap
 
     steps:
@@ -423,7 +380,7 @@ jobs:
         run: >
           docker build -t integritee/${{ matrix.flavor_id }}:${{ github.ref_name }}
           --target deployed-worker
-          --build-arg WORKER_MODE_ARG=${{ matrix.mode }} --build-arg SGX_COMMERCIAL_KEY=enclave-runtime/intel_sgx.pem --build-arg SGX_PASSFILE=enclave-runtime/passfile.txt --build-arg SGX_PRODUCTION=1 --build-arg WORKER_FEATURES_ARG=${{ matrix.worker_features }} --build-arg ADDITIONAL_FEATURES_ARG=${{ matrix.additional_features }} --build-arg SGX_MODE=${{ matrix.sgx_mode }}
+          --build-arg WORKER_MODE_ARG=${{ matrix.mode }} --build-arg SGX_COMMERCIAL_KEY=enclave-runtime/intel_sgx.pem --build-arg SGX_PASSFILE=enclave-runtime/passfile.txt --build-arg SGX_PRODUCTION=0 --build-arg WORKER_FEATURES_ARG=${{ matrix.worker_features }} --build-arg ADDITIONAL_FEATURES_ARG=${{ matrix.additional_features }} --build-arg SGX_MODE=${{ matrix.sgx_mode }}
           -f build.Dockerfile .
 
       - name: Save released teeracle
