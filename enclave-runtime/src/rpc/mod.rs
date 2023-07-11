@@ -15,6 +15,7 @@
 
 */
 
+pub mod encointer_utils;
 pub mod nostr_utils;
 pub mod rpc_response_channel;
 pub mod worker_api_direct;

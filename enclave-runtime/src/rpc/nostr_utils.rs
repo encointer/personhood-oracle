@@ -76,7 +76,6 @@ pub fn send_nostr_events(events_to_send: Vec<Event>, relay: &str) {
 	use nostr::prelude::*;
 	use tungstenite_sgx as tungstenite;
 
-	use log::info;
 	use nostr::{
 		key::FromSkStr,
 		nips::nip19::ToBech32,
