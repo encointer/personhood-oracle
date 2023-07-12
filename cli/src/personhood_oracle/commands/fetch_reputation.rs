@@ -39,7 +39,7 @@ pub type ReputationsWithReadProofs = (Vec<Reputation>, Vec<ReputationReadProof>)
 
 impl FetchReputationCmd {
 	pub fn run(&self, cli: &Cli) {
-		let api = get_chain_api(&cli);
+		let api = get_chain_api(cli);
 		let cid = CommunityIdentifier::from_str(&self.cid).unwrap();
 		let cindex = get_ceremony_index(&api);
 		let account = get_accountid_from_str(&self.account);
@@ -80,9 +80,9 @@ impl FetchReputationCmd {
 
 		// TODO fetch the storage item instead, to have builtin readproof validation.
 		let reputations =
-			query_last_n_reputations(&api, &account, cid, cindex, number_of_reputations);
+			query_last_n_reputations(api, &account, cid, cindex, number_of_reputations);
 
-		let read_proofs = get_read_proofs(&api, &account, cid, cindex, number_of_reputations);
+		let read_proofs = get_read_proofs(api, &account, cid, cindex, number_of_reputations);
 		// TODO add validation here as a new function
 		//validate_reputations(read_proofs.clone(), cid, cindex, account);
 		Some((reputations, read_proofs))
@@ -136,8 +136,7 @@ fn get_reputation(
 		None,
 	)
 	.unwrap()
-	.or(Some(Reputation::Unverified))
-	.unwrap()
+	.unwrap_or(Reputation::Unverified)
 }
 
 pub(crate) fn get_ceremony_index(api: &ParentchainApi) -> CeremonyIndexType {
@@ -153,9 +152,7 @@ fn query_last_n_reputations(
 	current_cindex: CeremonyIndexType,
 	n: CeremonyIndexType,
 ) -> Vec<Reputation> {
-	(1..=n)
-		.map(|i| get_reputation(api, prover, cid.clone(), current_cindex - i))
-		.collect()
+	(1..=n).map(|i| get_reputation(api, prover, cid, current_cindex - i)).collect()
 }
 
 fn get_read_proofs(
@@ -170,7 +167,7 @@ fn get_read_proofs(
 			api.get_storage_double_map_proof(
 				"EncointerCeremonies",
 				"ParticipantReputation",
-				(cid.clone(), current_cindex - i),
+				(cid, current_cindex - i),
 				prover.clone(),
 				None,
 			)

@@ -217,7 +217,7 @@ mod tests {
 		assert_eq!(1, author.get_pending_trusted_calls(shard).len());
 		assert_eq!(0, author.get_pending_trusted_getters(shard).len());
 
-		let trusted_operation_or_hash = TrustedOperationOrHash::from_top(trusted_operation.clone());
+		let trusted_operation_or_hash = TrustedOperationOrHash::from_top(trusted_operation);
 		let removed_tops = author.remove_top(vec![trusted_operation_or_hash], shard, true).unwrap();
 
 		assert_eq!(1, removed_tops.len());

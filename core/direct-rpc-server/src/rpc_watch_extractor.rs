@@ -117,6 +117,6 @@ pub mod tests {
 
 		let do_watch = watch_extractor.must_be_watched(&rpc_response).unwrap();
 
-		assert_eq!(Some(hash.clone()), do_watch);
+		assert_eq!(Some(hash), do_watch);
 	}
 }

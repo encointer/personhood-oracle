@@ -301,7 +301,7 @@ mod tests {
 	}
 
 	fn create_validateer_set_from_publics(authorities: Vec<Public>) -> Vec<Enclave> {
-		authorities.iter().map(|a| validateer(a.clone().into())).collect()
+		authorities.iter().map(|a| validateer((*a).into())).collect()
 	}
 
 	fn onchain_mock(

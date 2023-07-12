@@ -326,7 +326,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	let tokio_handle = tokio_handle_getter.get_handle();
 
 	#[cfg(feature = "teeracle")]
-	let teeracle_tokio_handle = tokio_handle.clone();
+	let _teeracle_tokio_handle = tokio_handle.clone();
 
 	// ------------------------------------------------------------------------
 	// Get the public key of our TEE.

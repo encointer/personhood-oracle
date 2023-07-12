@@ -15,16 +15,9 @@ use crate::{
 	command_utils::{get_accountid_from_str, get_chain_api},
 	Cli,
 };
-use encointer_primitives::{
-	ceremonies::Reputation, communities::CommunityIdentifier,
-	reputation_commitments::DescriptorType, scheduler::CeremonyIndexType,
-};
-use itp_node_api::api_client::ParentchainApi;
-use itp_types::H256;
-use log::error;
-use my_node_runtime::AccountId;
+use encointer_primitives::{communities::CommunityIdentifier, scheduler::CeremonyIndexType};
+
 use std::str::FromStr;
-use substrate_api_client::{GetStorage, ReadProof};
 
 use crate::personhood_oracle::FetchReputationCmd;
 use itp_time_utils::{duration_now, now_as_secs, Duration};
@@ -53,7 +46,7 @@ use crate::personhood_oracle::commands::fetch_reputation::get_ceremony_index;
 
 impl IssueNostrBadgeCmd {
 	pub fn run(&self, cli: &Cli) {
-		let api = get_chain_api(&cli);
+		let api = get_chain_api(cli);
 		let cid = CommunityIdentifier::from_str(&self.cid).unwrap();
 		let cindex = get_ceremony_index(&api);
 		let account = get_accountid_from_str(&self.account);
@@ -82,10 +75,10 @@ impl IssueNostrBadgeCmd {
 			let award = IssueNostrBadgeCmd::create_badge_award(badge_def.clone(), nostr_pub_key);
 
 			let badge_def = badge_def.into_event();
-			let mut award = award.into_event();
+			let award = award.into_event();
 
-			println!("badge_def struct is: {:#?}", badge_def.clone());
-			println!("badge_def as json: {:#?}", badge_def.clone().as_json());
+			println!("badge_def struct is: {:#?}", badge_def);
+			println!("badge_def as json: {:#?}", badge_def.as_json());
 
 			Self::send_nostr_events(vec![badge_def, award], &self.relay)
 			// The reputation is consumed for this purpose HERE, after the nostr badge has been issued successfully.
@@ -101,12 +94,12 @@ impl IssueNostrBadgeCmd {
 	fn get_ts() -> Timestamp {
 		let now = duration_now();
 		let time_supplier = IssueNostrBadgeCmd::get_time_supplier();
-		let ts = time_supplier.to_timestamp(now);
-		ts
+
+		time_supplier.to_timestamp(now)
 	}
 	fn create_badge_def() -> BadgeDefinition {
 		// Just for demo purposes, should be reworked
-		let mut builder = nip58::BadgeDefinitionBuilder::new("likely_person".to_owned());
+		let builder = nip58::BadgeDefinitionBuilder::new("likely_person".to_owned());
 		let thumb_size = ImageDimensions(181, 151);
 		let thumbs = vec![
 			(
@@ -136,8 +129,8 @@ impl IssueNostrBadgeCmd {
 		)
 		.unwrap();
 		let ts = IssueNostrBadgeCmd::get_ts();
-		let def = builder.build(&keys, ts, &secp).unwrap();
-		def
+
+		builder.build(&keys, ts, &secp).unwrap()
 	}
 	fn create_badge_award(
 		badge_definition: BadgeDefinition,
@@ -150,9 +143,7 @@ impl IssueNostrBadgeCmd {
 		let keys = Keys::generate_with_secp(&secp);
 		let ts = IssueNostrBadgeCmd::get_ts();
 
-		let award = nip58::BadgeAward::new(&badge_definition_event, awarded_keys, &keys, ts, &secp)
-			.unwrap();
-		award
+		nip58::BadgeAward::new(&badge_definition_event, awarded_keys, &keys, ts, &secp).unwrap()
 	}
 	//fn create_badge() -> Option<nip58::ProfileBadgesEvent> {}
 
@@ -160,13 +151,7 @@ impl IssueNostrBadgeCmd {
 		use nostr::prelude::*;
 		//use tungstenite_sgx as tungstenite;
 
-		use log::info;
-		use nostr::{
-			key::FromSkStr,
-			nips::nip19::ToBech32,
-			types::{Metadata as NostrMetadata, Timestamp as NostrTimestamp},
-			ChannelId, ClientMessage, EventBuilder, EventId, Keys,
-		};
+		use nostr::{key::FromSkStr, nips::nip19::ToBech32, ClientMessage, Keys};
 
 		use tungstenite::Message as WsMessage;
 
