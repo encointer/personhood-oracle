@@ -68,20 +68,15 @@ pub fn get_time_supplier() -> DemoTimeSupplier {
 pub fn get_ts() -> Timestamp {
 	let now = duration_now();
 	let time_supplier = get_time_supplier();
-	let ts = time_supplier.to_timestamp(now);
-	ts
+
+	time_supplier.to_timestamp(now)
 }
 
 pub fn send_nostr_events(events_to_send: Vec<Event>, relay: &str) {
 	use nostr::prelude::*;
 	use tungstenite_sgx as tungstenite;
 
-	use nostr::{
-		key::FromSkStr,
-		nips::nip19::ToBech32,
-		types::{Metadata as NostrMetadata, Timestamp as NostrTimestamp},
-		ChannelId, ClientMessage, EventBuilder, EventId, Keys,
-	};
+	use nostr::{key::FromSkStr, nips::nip19::ToBech32, ClientMessage, Keys};
 
 	use tungstenite::Message as WsMessage;
 

@@ -25,7 +25,7 @@ use crate::{
 };
 use codec::Encode;
 use core::{result::Result, str::FromStr};
-use encointer_primitives::{communities::CommunityIdentifier, scheduler::CeremonyIndexType};
+use encointer_primitives::communities::CommunityIdentifier;
 use ita_sgx_runtime::Runtime;
 use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, ExtrinsicSender};
 use itp_primitives_cache::{GetPrimitives, GLOBAL_PRIMITIVES_CACHE};
@@ -46,8 +46,7 @@ use nostr::{
 		nip58::{BadgeAward, BadgeDefinition, ImageDimensions},
 	},
 	prelude::{FromBech32, Secp256k1, XOnlyPublicKey},
-	types::time::TimeSupplier,
-	Event, Keys, Tag, Timestamp,
+	Keys, Tag,
 };
 use sgx_crypto_helper::rsa3072::Rsa3072PubKey;
 use sp_runtime::OpaqueExtrinsic;
@@ -340,7 +339,7 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 	let cindex =
 		itp_utils::hex::decode_hex(&hex_encoded_params[1]).map_err(|e| format!("{:?}", e))?;
 	let cindex = str::from_utf8(&cindex).expect("cindex should be a valid str value");
-	let cindex = u32::from_str_radix(&cindex, 10).expect("cid should be a valid integer value");
+	let cindex = (cindex).parse::<u32>().expect("cid should be a valid integer value");
 
 	let account =
 		itp_utils::hex::decode_hex(&hex_encoded_params[2]).map_err(|e| format!("{:?}", e))?;
@@ -352,7 +351,7 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 		.try_into()
 		.expect("Account vector size does not match the expected slice size.");
 
-	let account = AccountId::from(account.clone());
+	let account = AccountId::from(*account);
 
 	let nostr_pub_key =
 		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
@@ -373,7 +372,9 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 	let badge_def = badge_def.into_event();
 	let award = award.into_event();
 
-	send_nostr_events(vec![badge_def, award], &nostr_relay_url);
+	send_nostr_events(vec![badge_def, award], nostr_relay_url);
+
+	let _temp_tuple = (cid, cindex, account);
 
 	Ok(())
 }
@@ -389,14 +390,12 @@ fn create_nostr_badge_award(
 	let keys = Keys::generate_with_secp(&secp);
 	let ts = get_ts();
 
-	let award =
-		nip58::BadgeAward::new(&badge_definition_event, awarded_keys, &keys, ts, &secp).unwrap();
-	award
+	nip58::BadgeAward::new(&badge_definition_event, awarded_keys, &keys, ts, &secp).unwrap()
 }
 
 fn create_nostr_badge_definition() -> BadgeDefinition {
 	// Just for demo purposes, should be reworked
-	let mut builder = nip58::BadgeDefinitionBuilder::new("likely_person".to_owned());
+	let builder = nip58::BadgeDefinitionBuilder::new("likely_person".to_owned());
 	let thumb_size = ImageDimensions(181, 151);
 	let thumbs = vec![
 		(
@@ -419,8 +418,8 @@ fn create_nostr_badge_definition() -> BadgeDefinition {
 		Keys::from_sk_str("nsec13wqyx0syeu7unce6d7p8x4rqqe7elpfpr9ywsl5y6x427dzj8tyq36ku2r", &secp)
 			.unwrap();
 	let ts = get_ts();
-	let def = builder.build(&keys, ts, &secp).unwrap();
-	def
+
+	builder.build(&keys, ts, &secp).unwrap()
 }
 
 pub fn sidechain_io_handler<ImportFn, Error>(import_fn: ImportFn) -> IoHandler
