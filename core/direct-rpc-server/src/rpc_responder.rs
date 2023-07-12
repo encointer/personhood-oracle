@@ -249,7 +249,7 @@ pub mod tests {
 		connection_hash: &String,
 		connection_registry: Arc<TestConnectionRegistry>,
 	) {
-		let maybe_connection = connection_registry.withdraw(&connection_hash);
+		let maybe_connection = connection_registry.withdraw(connection_hash);
 		assert!(maybe_connection.is_some());
 	}
 
@@ -257,7 +257,7 @@ pub mod tests {
 		connection_hash: &String,
 		connection_registry: Arc<TestConnectionRegistry>,
 	) {
-		assert!(connection_registry.withdraw(&connection_hash).is_none());
+		assert!(connection_registry.withdraw(connection_hash).is_none());
 	}
 
 	fn create_registry_with_single_connection(
@@ -266,7 +266,7 @@ pub mod tests {
 		let connection_registry = TestConnectionRegistry::new();
 		let rpc_response = RpcResponseBuilder::new().with_id(2).build();
 
-		connection_registry.store(connection_hash.clone(), 1, rpc_response);
+		connection_registry.store(connection_hash, 1, rpc_response);
 		Arc::new(connection_registry)
 	}
 }

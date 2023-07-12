@@ -16,9 +16,10 @@
 */
 
 #![cfg_attr(test, feature(assert_matches))]
+#![allow(clippy::redundant_closure_call)]
 
 #[cfg(feature = "teeracle")]
-use crate::teeracle::{schedule_periodic_reregistration_thread, start_periodic_market_update};
+use crate::teeracle::schedule_periodic_reregistration_thread;
 
 #[cfg(not(feature = "dcap"))]
 use crate::utils::check_files;
@@ -326,7 +327,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	let tokio_handle = tokio_handle_getter.get_handle();
 
 	#[cfg(feature = "teeracle")]
-	let teeracle_tokio_handle = tokio_handle.clone();
+	let _teeracle_tokio_handle = tokio_handle.clone();
 
 	// ------------------------------------------------------------------------
 	// Get the public key of our TEE.
@@ -481,13 +482,6 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 		schedule_periodic_reregistration_thread(
 			send_register_xt,
 			run_config.reregister_teeracle_interval(),
-		);
-
-		start_periodic_market_update(
-			&node_api,
-			run_config.teeracle_update_interval(),
-			enclave.as_ref(),
-			&teeracle_tokio_handle,
 		);
 	}
 

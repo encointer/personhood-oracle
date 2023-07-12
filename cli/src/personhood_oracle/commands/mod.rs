@@ -15,7 +15,7 @@
 
 */
 
-pub mod encointer_utils;
-pub mod nostr_utils;
-pub mod rpc_response_channel;
-pub mod worker_api_direct;
+mod fetch_reputation;
+mod issue_nostr_badge;
+
+pub use self::{fetch_reputation::FetchReputationCmd, issue_nostr_badge::IssueNostrBadgeCmd};

@@ -70,8 +70,7 @@ fn if_shard_takes_up_all_slot_time_subsequent_shards_are_not_served() {
 	let shards =
 		vec![ShardIdentifier::default(), ShardIdentifier::default(), ShardIdentifier::default()];
 
-	let _slot_results =
-		PerShardSlotWorkerScheduler::on_slot(&mut slot_worker, slot_info.clone(), shards.clone());
+	let _slot_results = PerShardSlotWorkerScheduler::on_slot(&mut slot_worker, slot_info, shards);
 
 	assert_eq!(1, slot_worker.slot_infos.len());
 }

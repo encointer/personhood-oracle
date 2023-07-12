@@ -640,7 +640,7 @@ pub mod tests {
 		let msg = &b"test-message"[..];
 		let (pair, _) = ed25519::Pair::generate();
 
-		let signature = pair.sign(&msg);
+		let signature = pair.sign(msg);
 		let multi_sig = MultiSignature::from(signature);
 		TrustedCallSigned::new(call, nonce, multi_sig).into_trusted_operation(true)
 	}

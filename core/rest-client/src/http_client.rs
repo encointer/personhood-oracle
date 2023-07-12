@@ -349,7 +349,7 @@ mod tests {
 
 		impl RestPath<()> for HttpBinAnything {
 			fn get_path(_: ()) -> Result<String, Error> {
-				Ok(format!("anything"))
+				Ok("anything".to_string())
 			}
 		}
 
@@ -393,7 +393,7 @@ mod tests {
 
 		impl RestPath<()> for HttpBinAnything {
 			fn get_path(_: ()) -> Result<String, Error> {
-				Ok(format!("anything"))
+				Ok("anything".to_string())
 			}
 		}
 
@@ -429,7 +429,7 @@ mod tests {
 
 		impl RestPath<()> for HttpBinAnything {
 			fn get_path(_: ()) -> Result<String, Error> {
-				Ok(format!("anything"))
+				Ok("anything".to_string())
 			}
 		}
 
@@ -475,7 +475,7 @@ mod tests {
 
 		impl RestPath<()> for Vec<CoinGeckoCoinsList> {
 			fn get_path(_: ()) -> Result<String, Error> {
-				Ok(format!("api/v3/coins/list"))
+				Ok("api/v3/coins/list".to_string())
 			}
 		}
 
@@ -505,7 +505,7 @@ mod tests {
 
 		impl RestPath<()> for HttpBinAnything {
 			fn get_path(_: ()) -> Result<String, Error> {
-				Ok(format!("anything"))
+				Ok("anything".to_string())
 			}
 		}
 		let base_url = Url::parse("https://httpbin.org").unwrap();
@@ -542,7 +542,7 @@ mod tests {
 
 		impl RestPath<()> for HttpBinAnything {
 			fn get_path(_: ()) -> Result<String, Error> {
-				Ok(format!("anything"))
+				Ok("anything".to_string())
 			}
 		}
 
