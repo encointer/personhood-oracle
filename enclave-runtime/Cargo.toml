@@ -75,10 +75,10 @@ lazy_static = { version = "1.1.0", features = ["spin_no_std"] }
 primitive-types = { version = "0.12.1", default-features = false, features = ["codec", "serde_no_std"] }
 
 # nostr
+encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", default-features = false, optional = true, features = ["full_crypto"] }
 nostr = { default-features = false, optional = true, features = ["alloc", "nip19"], git = "https://github.com/OverOrion/nostr", branch = "no_std_upstream_working" }
 secp256k1 = { version = "0.24", default-features = false, features = ["alloc", "serde"] }
 tungstenite_sgx = { package = "tungstenite", optional = true, features = ["rustls-tls-webpki-roots"], git = "https://github.com/integritee-network/tungstenite-rs-sgx", branch = "sgx-experimental" }
-encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", default-features = false, optional = true, features = ["full_crypto"] }
 
 # scs / integritee
 jsonrpc-core = { default-features = false, git = "https://github.com/scs/jsonrpc", branch = "no_std_v18" }
