@@ -151,7 +151,7 @@ impl IssueNostrBadgeCmd {
 		use nostr::prelude::*;
 		//use tungstenite_sgx as tungstenite;
 
-		use nostr::{key::FromSkStr, nips::nip19::ToBech32, ClientMessage, Keys};
+		use nostr::{nips::nip19::ToBech32, ClientMessage};
 
 		use tungstenite::Message as WsMessage;
 
