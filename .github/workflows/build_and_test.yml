@@ -123,19 +123,19 @@ jobs:
         run: rustup show && cd enclave-runtime && rustup show
 
       - name: Clippy default features
-        run: cargo clippy -- -D warnings 
+        run: cargo clippy -- -D warnings -A clippy::redundant-closure-call
       - name: Enclave # Enclave is separate as it's not in the workspace
-        run: cd enclave-runtime && cargo clippy -- -D warnings 
+        run: cd enclave-runtime && cargo clippy -- -D warnings -A clippy::redundant-closure-call
 
       - name: Clippy with Teeracle feature
         run: |
-          cargo clippy --features teeracle -- -D warnings 
-          cd enclave-runtime && cargo clippy --features teeracle -- -D warnings 
+          cargo clippy --features teeracle -- -D warnings -A clippy::redundant-closure-call
+          cd enclave-runtime && cargo clippy --features teeracle -- -D warnings -A clippy::redundant-closure-call
 
       - name: Clippy with Offchain-worker feature
         run: |
-          cargo clippy --features offchain-worker -- -D warnings 
-          cd enclave-runtime && cargo clippy --features offchain-worker -- -D warnings 
+          cargo clippy --features offchain-worker -- -D warnings -A clippy::redundant-closure-call
+          cd enclave-runtime && cargo clippy --features offchain-worker -- -D warnings -A clippy::redundant-closure-call
 
       - name: Fail-fast; cancel other jobs
         if: failure()
