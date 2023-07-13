@@ -61,6 +61,38 @@ impl FetchReputationCmd {
 		}
 	}
 
+	pub fn fetch_reputation_rpc(cli: &Cli) -> Result<Option<ReputationsWithReadProofs>, String> {
+		let api = get_chain_api(&cli);
+		let cindex = get_ceremony_index(&api);
+
+		let rpc_params = vec![
+			self.cid.to_string(),
+			cindex.to_string(),
+			self.account.to_string(),
+			self.number_of_reputations.to_string(),
+		];
+
+		let rpc_method = "personhoodoracle_fetchReputation".to_owned();
+		let jsonrpc_call: String =
+			RpcRequest::compose_jsonrpc_call(rpc_method, vec![hex_encoded_report]).unwrap();
+
+		let rpc_response_str = direct_api.get(&jsonrpc_call).unwrap();
+
+		// Decode RPC response.
+		let Ok(rpc_response) = serde_json::from_str::<RpcResponse>(&rpc_response_str) else {
+			panic!("Can't parse RPC response: '{rpc_response_str}'");
+		};
+		let rpc_return_value = match RpcReturnValue::from_hex(&rpc_response.result) {
+			Ok(rpc_return_value) => rpc_return_value,
+			Err(e) => panic!("Failed to decode RpcReturnValue: {:?}", e),
+		};
+
+		match rpc_return_value.status {
+			DirectRequestStatus::Ok => println!("IAS attestation report verification succeded."),
+			_ => error!("IAS attestation report verification failed"),
+		}
+	}
+
 	// FIXME: change to result once it is an RPC method
 	pub fn fetch_reputation(
 		api: &ParentchainApi,
