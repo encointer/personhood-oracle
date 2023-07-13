@@ -20,12 +20,15 @@ use crate::{
 		generate_dcap_ra_extrinsic_from_quote_internal,
 		generate_ias_ra_extrinsic_from_der_cert_internal,
 	},
-	rpc::nostr_utils::{get_ts, send_nostr_events},
+	rpc::{
+		encointer_utils::fetch_reputation,
+		nostr_utils::{get_ts, send_nostr_events},
+	},
 	utils::get_validator_accessor_from_solo_or_parachain,
 };
 use codec::Encode;
 use core::{result::Result, str::FromStr};
-use encointer_primitives::communities::CommunityIdentifier;
+use encointer_primitives::{ceremonies::Reputation, communities::CommunityIdentifier};
 use ita_sgx_runtime::Runtime;
 use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, ExtrinsicSender};
 use itp_primitives_cache::{GetPrimitives, GLOBAL_PRIMITIVES_CACHE};
@@ -218,6 +221,22 @@ where
 		Ok(json!(json_value))
 	});
 
+	// personhoodoracle_fetchReputation
+	let personhoodoracle_fetch_reputation: &str = "personhoodoracle_fetchReputation";
+	io.add_sync_method(personhoodoracle_fetch_reputation, move |params: Params| {
+		let json_value = match fetch_reputation_inner(params) {
+			Ok(val) => RpcReturnValue {
+				do_watch: false,
+				value: val.encode(),
+				status: DirectRequestStatus::Ok,
+			}
+			.to_hex(),
+			Err(error) => compute_hex_encoded_return_error(error.as_str()),
+		};
+
+		Ok(json!(json_value))
+	});
+
 	// system_health
 	let state_health_name: &str = "system_health";
 	io.add_sync_method(state_health_name, |_: Params| {
@@ -319,6 +338,49 @@ fn attesteer_forward_ias_attestation_report_inner(
 		.unwrap();
 
 	Ok(ext)
+}
+fn fetch_reputation_inner(params: Params) -> Result<Option<Vec<Reputation>>, String> {
+	let hex_encoded_params = params.parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
+
+	if hex_encoded_params.len() != 4 {
+		return Err(format!(
+			"Wrong number of arguments for IAS attestation report forwarding: {}, expected: {}",
+			hex_encoded_params.len(),
+			1
+		))
+	}
+
+	let cid = itp_utils::hex::decode_hex(&hex_encoded_params[0]).map_err(|e| format!("{:?}", e))?;
+	let cid = str::from_utf8(&cid).expect("cid should be a valid str value");
+	let cid: CommunityIdentifier =
+		CommunityIdentifier::from_str(cid).map_err(|e| format!("{:?}", e))?;
+
+	let cindex =
+		itp_utils::hex::decode_hex(&hex_encoded_params[1]).map_err(|e| format!("{:?}", e))?;
+	let cindex = str::from_utf8(&cindex).expect("cindex should be a valid str value");
+	let cindex = (cindex).parse::<u32>().expect("cid should be a valid integer value");
+
+	let account =
+		itp_utils::hex::decode_hex(&hex_encoded_params[2]).map_err(|e| format!("{:?}", e))?;
+	if account.len() != 32 {
+		return Err(format!("AccountId size is incorrect: {}, expected: {}", account.len(), 32))
+	}
+	let account: &[u8; 32] = account
+		.as_slice()
+		.try_into()
+		.expect("Account vector size does not match the expected slice size.");
+
+	let account = AccountId::from(*account);
+
+	let number_of_reputations =
+		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
+	let number_of_reputations = str::from_utf8(&number_of_reputations)
+		.expect("number_of_reputations should be a valid str value");
+	let number_of_reputations = (number_of_reputations)
+		.parse::<u32>()
+		.expect("number_of_reputations should be a valid integer value");
+
+	Ok(fetch_reputation(cid, cindex, account, number_of_reputations))
 }
 
 fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {

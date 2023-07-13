@@ -34,15 +34,14 @@ pub struct FetchReputationCmd {
 	pub number_of_reputations: CeremonyIndexType,
 }
 
-pub type ReputationReadProof = substrate_api_client::api::error::Result<Option<ReadProof<H256>>>;
-pub type ReputationsWithReadProofs = (Vec<Reputation>, Vec<ReputationReadProof>);
-
 impl FetchReputationCmd {
 	pub fn run(&self, cli: &Cli) {
-		let api = get_chain_api(cli);
+		let api = get_chain_api(&cli);
 		let cid = CommunityIdentifier::from_str(&self.cid).unwrap();
 		let cindex = get_ceremony_index(&api);
 		let account = get_accountid_from_str(&self.account);
+
+		let direct_api = get_worker_api_direct(cli);
 
 		if let Some((reputations, read_proofs)) = FetchReputationCmd::fetch_reputation(
 			&api,
