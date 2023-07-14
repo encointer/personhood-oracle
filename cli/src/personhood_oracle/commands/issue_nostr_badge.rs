@@ -50,39 +50,40 @@ impl IssueNostrBadgeCmd {
 		let cid = CommunityIdentifier::from_str(&self.cid).unwrap();
 		let cindex = get_ceremony_index(&api);
 		let account = get_accountid_from_str(&self.account);
+		todo!()
 
-		if let Some((reputations, read_proofs)) = FetchReputationCmd::fetch_reputation(
-			&api,
-			cid,
-			cindex,
-			account.clone(),
-			self.number_of_reputations,
-		) {
-			let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
-			println!("reputation for {} is: {:#?}", account, reputations);
-			println!(
-				"verified reputatations number: {} out of:{}",
-				verified_reputations,
-				reputations.len()
-			);
-			println!("read proof is: {:#?}", read_proofs);
-			// At this point the following should be true:
-			// The reputatuion is valid and
-			// The reputatuion has been proof read and
-			let badge_def = IssueNostrBadgeCmd::create_badge_def();
+		// if let Some((reputations, read_proofs)) = FetchReputationCmd::fetch_reputation_rpc(
+		// 	&api,
+		// 	cid,
+		// 	cindex,
+		// 	account.clone(),
+		// 	self.number_of_reputations,
+		// ) {
+		// 	let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
+		// 	println!("reputation for {} is: {:#?}", account, reputations);
+		// 	println!(
+		// 		"verified reputatations number: {} out of:{}",
+		// 		verified_reputations,
+		// 		reputations.len()
+		// 	);
+		// 	println!("read proof is: {:#?}", read_proofs);
+		// 	// At this point the following should be true:
+		// 	// The reputatuion is valid and
+		// 	// The reputatuion has been proof read and
+		// 	let badge_def = IssueNostrBadgeCmd::create_badge_def();
 
-			let nostr_pub_key = XOnlyPublicKey::from_bech32(&self.nostr_pub_key).unwrap();
-			let award = IssueNostrBadgeCmd::create_badge_award(badge_def.clone(), nostr_pub_key);
+		// 	let nostr_pub_key = XOnlyPublicKey::from_bech32(&self.nostr_pub_key).unwrap();
+		// 	let award = IssueNostrBadgeCmd::create_badge_award(badge_def.clone(), nostr_pub_key);
 
-			let badge_def = badge_def.into_event();
-			let award = award.into_event();
+		// 	let badge_def = badge_def.into_event();
+		// 	let award = award.into_event();
 
-			println!("badge_def struct is: {:#?}", badge_def);
-			println!("badge_def as json: {:#?}", badge_def.as_json());
+		// 	println!("badge_def struct is: {:#?}", badge_def);
+		// 	println!("badge_def as json: {:#?}", badge_def.as_json());
 
-			Self::send_nostr_events(vec![badge_def, award], &self.relay)
-			// The reputation is consumed for this purpose HERE, after the nostr badge has been issued successfully.
-		}
+		// 	Self::send_nostr_events(vec![badge_def, award], &self.relay)
+		// 	// The reputation is consumed for this purpose HERE, after the nostr badge has been issued successfully.
+		// }
 	}
 
 	// Utility functions, will be moved

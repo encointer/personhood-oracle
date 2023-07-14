@@ -12,16 +12,21 @@
 */
 
 use crate::{
-	command_utils::{get_accountid_from_str, get_chain_api},
+	command_utils::{get_accountid_from_str, get_chain_api, get_worker_api_direct},
 	Cli,
 };
+use codec::Decode;
 use encointer_primitives::{
 	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
 };
+use itc_rpc_client::direct_client::DirectApi;
 use itp_node_api::api_client::ParentchainApi;
+use itp_rpc::{RpcRequest, RpcResponse, RpcReturnValue};
 use itp_storage::{StorageHasher, StorageProof, StorageProofChecker};
-use itp_types::H256;
+use itp_types::{DirectRequestStatus, H256};
+use itp_utils::FromHexPrefixed;
 use log::error;
+
 use my_node_runtime::AccountId;
 use sp_runtime::traits::BlakeTwo256;
 use std::str::FromStr;
@@ -43,26 +48,23 @@ impl FetchReputationCmd {
 
 		let direct_api = get_worker_api_direct(cli);
 
-		if let Some((reputations, read_proofs)) = FetchReputationCmd::fetch_reputation(
-			&api,
-			cid,
-			cindex,
-			account.clone(),
-			self.number_of_reputations,
-		) {
-			let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
-			println!("reputation for {} is: {:#?}", account, reputations);
-			println!(
-				"verified reputatations number: {} out of:{}",
-				verified_reputations,
-				reputations.len()
-			);
-			println!("read proof is: {:#?}", read_proofs);
+		if let Ok(reputation) = self.fetch_reputation_rpc(&cli) {
+			todo!()
+			// 	let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
+			// 	println!("reputation for {} is: {:#?}", account, reputations);
+			// 	println!(
+			// 		"verified reputatations number: {} out of:{}",
+			// 		verified_reputations,
+			// 		reputations.len()
+			// 	);
+			// 	println!("read proof is: {:#?}", read_proofs);
 		}
 	}
 
-	pub fn fetch_reputation_rpc(cli: &Cli) -> Result<Option<ReputationsWithReadProofs>, String> {
+	//pub fn fetch_reputation_rpc(cli: &Cli) -> Result<Option<ReputationsWithReadProofs>, String> {
+	pub fn fetch_reputation_rpc(&self, cli: &Cli) -> Result<Option<Vec<Reputation>>, String> {
 		let api = get_chain_api(&cli);
+		let direct_api = get_worker_api_direct(cli);
 		let cindex = get_ceremony_index(&api);
 
 		let rpc_params = vec![
@@ -72,9 +74,14 @@ impl FetchReputationCmd {
 			self.number_of_reputations.to_string(),
 		];
 
+		let rpc_params = rpc_params
+			.into_iter()
+			.map(|p| itp_utils::hex::hex_encode(p.as_bytes()))
+			.collect();
+
 		let rpc_method = "personhoodoracle_fetchReputation".to_owned();
 		let jsonrpc_call: String =
-			RpcRequest::compose_jsonrpc_call(rpc_method, vec![hex_encoded_report]).unwrap();
+			RpcRequest::compose_jsonrpc_call(rpc_method, rpc_params).unwrap();
 
 		let rpc_response_str = direct_api.get(&jsonrpc_call).unwrap();
 
@@ -88,36 +95,46 @@ impl FetchReputationCmd {
 		};
 
 		match rpc_return_value.status {
-			DirectRequestStatus::Ok => println!("IAS attestation report verification succeded."),
-			_ => error!("IAS attestation report verification failed"),
+			DirectRequestStatus::Ok => {
+				println!("Reputations fetched.");
+				let reputations: Option<Vec<Reputation>> =
+					Decode::decode(&mut rpc_return_value.value.as_slice())
+						.expect("Failed to decode reputations");
+				Ok(reputations)
+			},
+			_ => {
+				let error_msg = "Reputations fetching failed";
+				error!("{}", &error_msg);
+				Err(error_msg.to_string())
+			},
 		}
 	}
 
-	// FIXME: change to result once it is an RPC method
-	pub fn fetch_reputation(
-		api: &ParentchainApi,
-		cid: CommunityIdentifier,
-		cindex: CeremonyIndexType,
-		account: AccountId,
-		number_of_reputations: CeremonyIndexType,
-	) -> Option<ReputationsWithReadProofs> {
-		if cindex < number_of_reputations {
-			error!(
-				"current ceremony index is {}, can't fetch last {} ceremonies.",
-				cindex, number_of_reputations
-			);
-			return None
-		}
+	// // FIXME: change to result once it is an RPC method
+	// pub fn fetch_reputation(
+	// 	api: &ParentchainApi,
+	// 	cid: CommunityIdentifier,
+	// 	cindex: CeremonyIndexType,
+	// 	account: AccountId,
+	// 	number_of_reputations: CeremonyIndexType,
+	// ) -> Option<ReputationsWithReadProofs> {
+	// 	if cindex < number_of_reputations {
+	// 		error!(
+	// 			"current ceremony index is {}, can't fetch last {} ceremonies.",
+	// 			cindex, number_of_reputations
+	// 		);
+	// 		return None
+	// 	}
 
-		// TODO fetch the storage item instead, to have builtin readproof validation.
-		let reputations =
-			query_last_n_reputations(api, &account, cid, cindex, number_of_reputations);
+	// 	// TODO fetch the storage item instead, to have builtin readproof validation.
+	// 	let reputations =
+	// 		query_last_n_reputations(api, &account, cid, cindex, number_of_reputations);
 
-		let read_proofs = get_read_proofs(api, &account, cid, cindex, number_of_reputations);
-		// TODO add validation here as a new function
-		//validate_reputations(read_proofs.clone(), cid, cindex, account);
-		Some((reputations, read_proofs))
-	}
+	// 	let read_proofs = get_read_proofs(api, &account, cid, cindex, number_of_reputations);
+	// 	// TODO add validation here as a new function
+	// 	//validate_reputations(read_proofs.clone(), cid, cindex, account);
+	// 	Some((reputations, read_proofs))
+	// }
 
 	pub fn validate_reputations(
 		proofs: &Vec<StorageProof>,
