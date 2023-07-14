@@ -28,13 +28,13 @@ pub fn fetch_reputation(
 	cindex: CeremonyIndexType,
 	account: AccountId,
 	number_of_reputations: CeremonyIndexType,
-) -> Option<Vec<Reputation>> {
+) -> Vec<Reputation> {
 	if cindex < number_of_reputations {
 		error!(
 			"current ceremony index is {}, can't fetch last {} ceremonies.",
 			cindex, number_of_reputations
 		);
-		return None
+		return vec![]
 	}
 
 	// TODO fetch the storage item instead, to have builtin readproof validation.
@@ -43,7 +43,7 @@ pub fn fetch_reputation(
 	//let read_proofs = get_read_proofs(&account, cid, cindex, number_of_reputations);
 	// TODO add validation here as a new function
 	//validate_reputations(read_proofs.clone(), cid, cindex, account);
-	Some(reputations)
+	reputations
 }
 
 fn query_last_n_reputations(

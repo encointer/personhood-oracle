@@ -53,7 +53,13 @@ use nostr::{
 };
 use sgx_crypto_helper::rsa3072::Rsa3072PubKey;
 use sp_runtime::OpaqueExtrinsic;
-use std::{borrow::ToOwned, format, str, string::String, sync::Arc, vec::Vec};
+use std::{
+	borrow::ToOwned,
+	format, str,
+	string::{String, ToString},
+	sync::Arc,
+	vec::Vec,
+};
 
 fn compute_hex_encoded_return_error(error_msg: &str) -> String {
 	RpcReturnValue::from_error_message(error_msg).to_hex()
@@ -339,7 +345,8 @@ fn attesteer_forward_ias_attestation_report_inner(
 
 	Ok(ext)
 }
-fn fetch_reputation_inner(params: Params) -> Result<Option<Vec<Reputation>>, String> {
+// FIXME: have the user submit a `ProofOfAttendance`
+fn fetch_reputation_inner(params: Params) -> Result<Vec<Reputation>, String> {
 	let hex_encoded_params = params.parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
 
 	if hex_encoded_params.len() != 4 {
@@ -384,6 +391,15 @@ fn fetch_reputation_inner(params: Params) -> Result<Option<Vec<Reputation>>, Str
 }
 
 fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
+	// Check reputation first - will be change later to have the user submit their `ProofOfAttendance`
+
+	let reputations = fetch_reputation_inner(params.clone())?;
+	let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
+
+	if verified_reputations == 0 {
+		return Err("Failed to check reputations".to_string())
+	}
+
 	let hex_encoded_params = params.parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
 
 	if hex_encoded_params.len() != 5 {
