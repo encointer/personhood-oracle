@@ -38,12 +38,13 @@ pub fn fetch_reputation(
 	}
 
 	// TODO fetch the storage item instead, to have builtin readproof validation.
-	let reputations = query_last_n_reputations(&account, cid, cindex, number_of_reputations);
+	//let reputations = query_last_n_reputations(&account, cid, cindex, number_of_reputations);
 
 	//let read_proofs = get_read_proofs(&account, cid, cindex, number_of_reputations);
 	// TODO add validation here as a new function
 	//validate_reputations(read_proofs.clone(), cid, cindex, account);
-	reputations
+	//reputations
+	query_last_n_reputations(&account, cid, cindex, number_of_reputations)
 }
 
 fn query_last_n_reputations(
