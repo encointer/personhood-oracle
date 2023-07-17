@@ -22,15 +22,13 @@ use encointer_primitives::{
 use itc_rpc_client::direct_client::DirectApi;
 use itp_node_api::api_client::ParentchainApi;
 use itp_rpc::{RpcRequest, RpcResponse, RpcReturnValue};
-use itp_storage::{StorageHasher, StorageProof, StorageProofChecker};
-use itp_types::{DirectRequestStatus, H256};
+
+use itp_types::DirectRequestStatus;
 use itp_utils::FromHexPrefixed;
 use log::error;
 
-use my_node_runtime::AccountId;
-use sp_runtime::traits::BlakeTwo256;
 use std::str::FromStr;
-use substrate_api_client::{GetStorage, ReadProof};
+use substrate_api_client::GetStorage;
 
 #[derive(Debug, Clone, Parser)]
 pub struct FetchReputationCmd {
@@ -41,14 +39,14 @@ pub struct FetchReputationCmd {
 
 impl FetchReputationCmd {
 	pub fn run(&self, cli: &Cli) {
-		let _api = get_chain_api(&cli);
+		let _api = get_chain_api(cli);
 		let _cid = CommunityIdentifier::from_str(&self.cid).unwrap();
-		let _cindex = get_ceremony_index(&api);
+		let _cindex = get_ceremony_index(&_api);
 		let _account = get_accountid_from_str(&self.account);
 
 		let _direct_api = get_worker_api_direct(cli);
 
-		if let Ok(reputation) = self.fetch_reputation_rpc(&cli) {
+		if let Ok(_reputation) = self.fetch_reputation_rpc(cli) {
 			todo!()
 			// 	let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
 			// 	println!("reputation for {} is: {:#?}", account, reputations);
@@ -63,7 +61,7 @@ impl FetchReputationCmd {
 
 	//pub fn fetch_reputation_rpc(cli: &Cli) -> Result<Option<ReputationsWithReadProofs>, String> {
 	pub fn fetch_reputation_rpc(&self, cli: &Cli) -> Result<Vec<Reputation>, String> {
-		let api = get_chain_api(&cli);
+		let api = get_chain_api(cli);
 		let direct_api = get_worker_api_direct(cli);
 		let cindex = get_ceremony_index(&api);
 

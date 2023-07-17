@@ -12,26 +12,14 @@
 */
 
 use crate::{
-	command_utils::{get_accountid_from_str, get_chain_api, get_worker_api_direct},
-	personhood_oracle::FetchReputationCmd,
+	command_utils::{get_chain_api, get_worker_api_direct},
 	Cli,
 };
-use encointer_primitives::{communities::CommunityIdentifier, scheduler::CeremonyIndexType};
+use encointer_primitives::scheduler::CeremonyIndexType;
 use itc_rpc_client::direct_client::DirectApi;
 use itp_rpc::{RpcRequest, RpcResponse, RpcReturnValue};
-use itp_time_utils::{duration_now, now_as_secs, Duration};
+
 use itp_utils::FromHexPrefixed;
-use nostr::{
-	key::FromSkStr,
-	nips::{
-		nip58,
-		nip58::{BadgeAward, BadgeDefinition, ImageDimensions},
-	},
-	prelude::{FromBech32, Secp256k1, XOnlyPublicKey},
-	types::time::TimeSupplier,
-	Event, Keys, Tag, Timestamp,
-};
-use std::str::FromStr;
 
 #[derive(Debug, Clone, Parser)]
 pub struct IssueNostrBadgeCmd {
@@ -49,7 +37,7 @@ use crate::personhood_oracle::commands::fetch_reputation::get_ceremony_index;
 impl IssueNostrBadgeCmd {
 	pub fn run(&self, cli: &Cli) {
 		//todo!();
-		let api = get_chain_api(&cli);
+		let api = get_chain_api(cli);
 		let direct_api = get_worker_api_direct(cli);
 		let cindex = get_ceremony_index(&api);
 
@@ -76,7 +64,7 @@ impl IssueNostrBadgeCmd {
 		let Ok(rpc_response) = serde_json::from_str::<RpcResponse>(&rpc_response_str) else {
 			panic!("Can't parse RPC response: '{rpc_response_str}'");
 		};
-		let rpc_return_value = match RpcReturnValue::from_hex(&rpc_response.result) {
+		let _rpc_return_value = match RpcReturnValue::from_hex(&rpc_response.result) {
 			Ok(rpc_return_value) => rpc_return_value,
 			Err(e) => panic!("Failed to decode RpcReturnValue: {:?}", e),
 		};
