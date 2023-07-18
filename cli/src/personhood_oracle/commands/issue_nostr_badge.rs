@@ -58,7 +58,9 @@ impl IssueNostrBadgeCmd {
 		let jsonrpc_call: String =
 			RpcRequest::compose_jsonrpc_call(rpc_method, rpc_params).unwrap();
 
-		let rpc_response_str = direct_api.get(&jsonrpc_call).unwrap();
+		let rpc_response_str_result = direct_api.get(&jsonrpc_call);
+		println!("rpc_response_str_result is:{:#?}", &rpc_response_str_result);
+		let rpc_response_str = rpc_response_str_result.unwrap();
 
 		// Decode RPC response.
 		let Ok(rpc_response) = serde_json::from_str::<RpcResponse>(&rpc_response_str) else {
