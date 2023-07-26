@@ -22,6 +22,7 @@ use encointer_primitives::{
 use itc_rpc_client::direct_client::DirectApi;
 use itp_node_api::api_client::ParentchainApi;
 use itp_rpc::{RpcRequest, RpcResponse, RpcReturnValue};
+use itp_utils::ToHexPrefixed;
 
 use itp_types::DirectRequestStatus;
 use itp_utils::FromHexPrefixed;
@@ -68,14 +69,21 @@ impl FetchReputationCmd {
 		let rpc_params = vec![
 			self.cid.to_string(),
 			cindex.to_string(),
-			self.account.to_string(),
+			self.account.to_hex(),
 			self.number_of_reputations.to_string(),
 		];
+		println!("rpc_params is : {:#?}", &rpc_params);
 
-		let rpc_params = rpc_params
+		let rpc_params: Vec<String> = rpc_params
 			.into_iter()
-			.map(|p| itp_utils::hex::hex_encode(p.as_bytes()))
+			.map(|p| (itp_utils::hex::hex_encode(p.as_bytes())))
 			.collect();
+
+		let cid = itp_utils::hex::decode_hex(&rpc_params[0].as_bytes())
+			.map_err(|e| format!("{:?}", e))?;
+		println!("cid is: {:#?}", &cid);
+		let cid = std::str::from_utf8(&cid).map_err(|e| format!("{:?}", e))?;
+		println!("cid is: {:#?}", &cid);
 
 		let rpc_method = "personhoodoracle_fetchReputation".to_owned();
 		let jsonrpc_call: String =
@@ -87,10 +95,13 @@ impl FetchReputationCmd {
 		let Ok(rpc_response) = serde_json::from_str::<RpcResponse>(&rpc_response_str) else {
 			panic!("Can't parse RPC response: '{rpc_response_str}'");
 		};
+		println!("rpc_response is : {:#?}", &rpc_response);
 		let rpc_return_value = match RpcReturnValue::from_hex(&rpc_response.result) {
 			Ok(rpc_return_value) => rpc_return_value,
 			Err(e) => panic!("Failed to decode RpcReturnValue: {:?}", e),
 		};
+
+		println!("rpc_return_value is : {:#?}", &rpc_return_value);
 
 		match rpc_return_value.status {
 			DirectRequestStatus::Ok => {
@@ -103,6 +114,10 @@ impl FetchReputationCmd {
 			_ => {
 				let error_msg = "Reputations fetching failed";
 				error!("{}", &error_msg);
+				let inner_error_msg: String =
+					Decode::decode(&mut rpc_return_value.value.as_slice())
+						.expect("Failed to decode reputations error msg");
+				error!("inner_error_msg: {:#?}", &inner_error_msg);
 				Err(error_msg.to_string())
 			},
 		}

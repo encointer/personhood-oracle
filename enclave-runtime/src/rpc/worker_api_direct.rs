@@ -26,7 +26,7 @@ use crate::{
 	},
 	utils::get_validator_accessor_from_solo_or_parachain,
 };
-use codec::Encode;
+use codec::{Decode, Encode};
 use core::{result::Result, str::FromStr};
 use encointer_primitives::{ceremonies::Reputation, communities::CommunityIdentifier};
 use ita_sgx_runtime::Runtime;
@@ -358,26 +358,38 @@ fn fetch_reputation_inner(params: Params) -> Result<Vec<Reputation>, String> {
 	}
 
 	let cid = itp_utils::hex::decode_hex(&hex_encoded_params[0]).map_err(|e| format!("{:?}", e))?;
-	let cid = str::from_utf8(&cid).expect("cid should be a valid str value");
+	println!("cid is: {:#?}", &cid);
+	let cid = str::from_utf8(&cid).map_err(|e| format!("{:?}", e))?;
+	println!("cid is: {:#?}", &cid);
 	let cid: CommunityIdentifier =
 		CommunityIdentifier::from_str(cid).map_err(|e| format!("{:?}", e))?;
+	println!("cid is: {:#?}", &cid);
 
 	let cindex =
 		itp_utils::hex::decode_hex(&hex_encoded_params[1]).map_err(|e| format!("{:?}", e))?;
+	println!("cindex is: {:#?}", &cindex);
 	let cindex = str::from_utf8(&cindex).expect("cindex should be a valid str value");
+	println!("cindex is: {:#?}", &cindex);
 	let cindex = (cindex).parse::<u32>().expect("cid should be a valid integer value");
+	println!("cindex is: {:#?}", &cindex);
 
 	let account =
 		itp_utils::hex::decode_hex(&hex_encoded_params[2]).map_err(|e| format!("{:?}", e))?;
-	if account.len() != 32 {
-		return Err(format!("AccountId size is incorrect: {}, expected: {}", account.len(), 32))
-	}
-	let account: &[u8; 32] = account
-		.as_slice()
-		.try_into()
-		.expect("Account vector size does not match the expected slice size.");
+	println!("account is: {:#?}", &account);
+	// if account.len() != 32 {
+	// 	return Err(format!("AccountId size is incorrect: {}, expected: {}", account.len(), 32))
+	// }
+	// let account: &[u8; 32] = account
+	// 	.as_slice()
+	// 	.try_into()
+	// 	.expect("Account vector size does not match the expected slice size.");
 
-	let account = AccountId::from(*account);
+	let account = str::from_utf8(&account).map_err(|e| format!("{:?}", e))?;
+	println!("account is: {:#?}", &account);
+	let account = AccountId::from_hex(&account).map_err(|e| format!("{:?}", e))?;
+	println!("account is: {:#?}", &account);
+	//let account = (account).map_err(|e| format!("{:?}", e))?;
+	//println!("account is: {:#?}", &account);
 
 	let number_of_reputations =
 		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
