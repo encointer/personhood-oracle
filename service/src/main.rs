@@ -631,63 +631,6 @@ fn print_events(events: Vec<Event>) {
 					},
 				}
 			},
-			#[cfg(feature = "teeracle")]
-			RuntimeEvent::Teeracle(re) => {
-				debug!("{:?}", re);
-				match &re {
-					my_node_runtime::pallet_teeracle::Event::ExchangeRateUpdated(
-						source,
-						currency,
-						new_value,
-					) => {
-						println!("[+] Received ExchangeRateUpdated event");
-						println!("    Data source:  {}", source);
-						println!("    Currency:  {}", currency);
-						println!("    Exchange rate: {:?}", new_value);
-					},
-					my_node_runtime::pallet_teeracle::Event::ExchangeRateDeleted(
-						source,
-						currency,
-					) => {
-						println!("[+] Received ExchangeRateDeleted event");
-						println!("    Data source:  {}", source);
-						println!("    Currency:  {}", currency);
-					},
-					my_node_runtime::pallet_teeracle::Event::AddedToWhitelist(
-						source,
-						mrenclave,
-					) => {
-						println!("[+] Received AddedToWhitelist event");
-						println!("    Data source:  {}", source);
-						println!("    Currency:  {:?}", mrenclave);
-					},
-					my_node_runtime::pallet_teeracle::Event::RemovedFromWhitelist(
-						source,
-						mrenclave,
-					) => {
-						println!("[+] Received RemovedFromWhitelist event");
-						println!("    Data source:  {}", source);
-						println!("    Currency:  {:?}", mrenclave);
-					},
-					_ => {
-						trace!("Ignoring unsupported pallet_teeracle event");
-					},
-				}
-			},
-			#[cfg(feature = "sidechain")]
-			RuntimeEvent::Sidechain(re) => match &re {
-				my_node_runtime::pallet_sidechain::Event::ProposedSidechainBlock(
-					sender,
-					payload,
-				) => {
-					info!("[+] Received ProposedSidechainBlock event");
-					debug!("    From:    {:?}", sender);
-					debug!("    Payload: {:?}", hex::encode(payload));
-				},
-				_ => {
-					trace!("Ignoring unsupported pallet_sidechain event");
-				},
-			},
 			_ => {
 				trace!("Ignoring event {:?}", evr);
 			},

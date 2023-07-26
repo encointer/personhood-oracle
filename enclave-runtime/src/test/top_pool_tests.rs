@@ -184,7 +184,7 @@ fn create_shielding_call_extrinsic<ShieldingKey: ShieldingCryptoEncrypt>(
 		0,
 		0,
 		H256::default(),
-		ParentchainAdditionalParams::default(),
+		Default::default(),
 	);
 
 	let dummy_node_metadata = NodeMetadataMock::new();
