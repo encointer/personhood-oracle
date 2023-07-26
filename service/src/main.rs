@@ -369,6 +369,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	// Start trusted worker rpc server
 	if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain
 		|| WorkerModeProvider::worker_mode() == WorkerMode::OffChainWorker
+		|| WorkerModeProvider::worker_mode() == WorkerMode::Teeracle
 	{
 		let direct_invocation_server_addr = config.trusted_worker_url_internal();
 		let enclave_for_direct_invocation = enclave.clone();
