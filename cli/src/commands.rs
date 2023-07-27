@@ -47,11 +47,7 @@ pub fn match_command(cli: &Cli) -> CliResult {
 	match &cli.command {
 		Commands::Base(cmd) => cmd.run(cli),
 		Commands::Trusted(trusted_cli) => trusted_cli.run(cli),
-		#[cfg(feature = "teeracle")]
-		Commands::Attesteer(cmd) => {
-			cmd.run(cli);
-			Ok(CliResultOk::None)
-		},
+		Commands::Attesteer(_) => Ok(CliResultOk::None),
 		#[cfg(feature = "teeracle")]
 		Commands::PersonhoodOracle(cmd) => {
 			cmd.run(cli);
