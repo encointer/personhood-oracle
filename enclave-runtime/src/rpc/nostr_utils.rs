@@ -16,7 +16,13 @@
 */
 use crate::{String, Vec};
 use itp_time_utils::{duration_now, now_as_secs, Duration};
-use nostr::{types::time::TimeSupplier, Event, Timestamp};
+use log::info;
+use nostr::{prelude::*, types::time::TimeSupplier, Event, Timestamp};
+use tungstenite_sgx as tungstenite;
+
+use nostr::{key::FromSkStr, ClientMessage, Keys};
+
+use tungstenite::Message as WsMessage;
 
 pub struct DemoTimeSupplier {}
 
@@ -72,38 +78,25 @@ pub fn get_ts() -> Timestamp {
 	time_supplier.to_timestamp(now)
 }
 
-pub fn send_nostr_events(events_to_send: Vec<Event>, relay: &str, private_key: &str) {
-	use nostr::prelude::*;
-	use tungstenite_sgx as tungstenite;
-
-	use nostr::{key::FromSkStr, nips::nip19::ToBech32, ClientMessage, Keys};
-
-	use tungstenite::Message as WsMessage;
-
+pub fn send_nostr_events(
+	events_to_send: Vec<Event>,
+	relay: &str,
+	private_key: &str,
+) -> Result<(), String> {
 	let secp = Secp256k1::new();
-
-	// or use your already existing
-	//
-	// From HEX or Bech32
-	let my_keys = Keys::from_sk_str(private_key, &secp).unwrap();
-
-	// Show bech32 public key
-	let bech32_pubkey: String = my_keys.public_key().to_bech32().unwrap();
-	println!("Bech32 PubKey: {}", bech32_pubkey);
-	println!("Secret key: {}", my_keys.secret_key().unwrap().to_bech32().unwrap());
+	let my_keys = Keys::from_sk_str(private_key, &secp).map_err(|e| format!("{:?}", e))?;
 
 	// Connect to relay
 	let (mut socket, response) =
-        //tungstenite::connect("wss://nostr.lu.ke").expect("Can't connect to relay");
-        tungstenite::connect(relay).expect("Can't connect to relay");
-
-	println!("response is: {:#?}", &response);
-	println!("socket is: {:#?}", &socket);
+		tungstenite::connect(relay).map_err(|e| format!("Can't connect to relay: {:?}", e))?;
 
 	for event in events_to_send {
-		println!("sending text message with id {}", event.id.to_bech32().unwrap());
+		info!("sending text message with id {}", event.id.to_bech32().unwrap());
 
 		let msg = ClientMessage::new_event(event).as_json();
-		socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
+		socket
+			.write_message(WsMessage::Text(msg))
+			.map_err(|e| format!("sendind nostr events failed: {:?}", e))?;
 	}
+	Ok(())
 }

@@ -436,7 +436,8 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 	let badge_def = badge_def.into_event();
 	let award = award.into_event();
 
-	send_nostr_events(vec![badge_def, award], &nostr_relay_url, &nostr_issuers_private_key);
+	send_nostr_events(vec![badge_def, award], &nostr_relay_url, &nostr_issuers_private_key)
+		.map_err(|e| format!("Failed to send nostr events: {:?}", e))?;
 
 	let _temp_tuple = (cid, cindex, account);
 

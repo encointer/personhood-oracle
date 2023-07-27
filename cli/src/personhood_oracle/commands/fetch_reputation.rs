@@ -39,16 +39,14 @@ pub struct FetchReputationCmd {
 
 impl FetchReputationCmd {
 	pub fn run(&self, cli: &Cli) {
-		if let Ok(_reputation) = self.fetch_reputation_rpc(cli) {
-			todo!()
-			// 	let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
-			// 	println!("reputation for {} is: {:#?}", account, reputations);
-			// 	println!(
-			// 		"verified reputatations number: {} out of:{}",
-			// 		verified_reputations,
-			// 		reputations.len()
-			// 	);
-			// 	println!("read proof is: {:#?}", read_proofs);
+		if let Ok(reputations) = self.fetch_reputation_rpc(cli) {
+			let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
+			println!("reputation for {} is: {:#?}", &self.account, reputations);
+			println!(
+				"verified reputatations number: {} out of:{}",
+				verified_reputations,
+				reputations.len()
+			);
 		}
 	}
 
