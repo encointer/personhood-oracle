@@ -72,7 +72,7 @@ pub fn get_ts() -> Timestamp {
 	time_supplier.to_timestamp(now)
 }
 
-pub fn send_nostr_events(events_to_send: Vec<Event>, relay: &str) {
+pub fn send_nostr_events(events_to_send: Vec<Event>, relay: &str, private_key: &str) {
 	use nostr::prelude::*;
 	use tungstenite_sgx as tungstenite;
 
@@ -85,9 +85,7 @@ pub fn send_nostr_events(events_to_send: Vec<Event>, relay: &str) {
 	// or use your already existing
 	//
 	// From HEX or Bech32
-	let my_keys =
-		Keys::from_sk_str("nsec13wqyx0syeu7unce6d7p8x4rqqe7elpfpr9ywsl5y6x427dzj8tyq36ku2r", &secp)
-			.unwrap();
+	let my_keys = Keys::from_sk_str(private_key, &secp).unwrap();
 
 	// Show bech32 public key
 	let bech32_pubkey: String = my_keys.public_key().to_bech32().unwrap();

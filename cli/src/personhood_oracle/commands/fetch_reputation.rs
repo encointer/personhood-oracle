@@ -15,14 +15,13 @@ use crate::{
 	command_utils::{get_accountid_from_str, get_chain_api, get_worker_api_direct},
 	Cli,
 };
-use codec::Decode;
+use codec::{Decode, Encode};
 use encointer_primitives::{
 	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
 };
 use itc_rpc_client::direct_client::DirectApi;
 use itp_node_api::api_client::ParentchainApi;
 use itp_rpc::{RpcRequest, RpcResponse, RpcReturnValue};
-use itp_utils::ToHexPrefixed;
 
 use itp_types::DirectRequestStatus;
 use itp_utils::FromHexPrefixed;
@@ -40,13 +39,6 @@ pub struct FetchReputationCmd {
 
 impl FetchReputationCmd {
 	pub fn run(&self, cli: &Cli) {
-		let _api = get_chain_api(cli);
-		let _cid = CommunityIdentifier::from_str(&self.cid).unwrap();
-		let _cindex = get_ceremony_index(&_api);
-		let _account = get_accountid_from_str(&self.account);
-
-		let _direct_api = get_worker_api_direct(cli);
-
 		if let Ok(_reputation) = self.fetch_reputation_rpc(cli) {
 			todo!()
 			// 	let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
@@ -60,30 +52,26 @@ impl FetchReputationCmd {
 		}
 	}
 
-	//pub fn fetch_reputation_rpc(cli: &Cli) -> Result<Option<ReputationsWithReadProofs>, String> {
 	pub fn fetch_reputation_rpc(&self, cli: &Cli) -> Result<Vec<Reputation>, String> {
 		let api = get_chain_api(cli);
 		let direct_api = get_worker_api_direct(cli);
 		let cindex = get_ceremony_index(&api);
 
+		let cid = CommunityIdentifier::from_str(&self.cid).unwrap();
+		let account = get_accountid_from_str(&self.account);
+
 		let rpc_params = vec![
-			self.cid.to_string(),
-			cindex.to_string(),
-			self.account.to_hex(),
-			self.number_of_reputations.to_string(),
+			cid.encode(),
+			cindex.encode(),
+			account.encode(),
+			self.number_of_reputations.encode(),
 		];
 		println!("rpc_params is : {:#?}", &rpc_params);
 
 		let rpc_params: Vec<String> = rpc_params
 			.into_iter()
-			.map(|p| (itp_utils::hex::hex_encode(p.as_bytes())))
+			.map(|p| (itp_utils::hex::hex_encode(p.as_slice())))
 			.collect();
-
-		let cid = itp_utils::hex::decode_hex(&rpc_params[0].as_bytes())
-			.map_err(|e| format!("{:?}", e))?;
-		println!("cid is: {:#?}", &cid);
-		let cid = std::str::from_utf8(&cid).map_err(|e| format!("{:?}", e))?;
-		println!("cid is: {:#?}", &cid);
 
 		let rpc_method = "personhoodoracle_fetchReputation".to_owned();
 		let jsonrpc_call: String =

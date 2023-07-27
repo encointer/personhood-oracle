@@ -27,8 +27,10 @@ use crate::{
 	utils::get_validator_accessor_from_solo_or_parachain,
 };
 use codec::{Decode, Encode};
-use core::{result::Result, str::FromStr};
-use encointer_primitives::{ceremonies::Reputation, communities::CommunityIdentifier};
+use core::result::Result;
+use encointer_primitives::{
+	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
+};
 use ita_sgx_runtime::Runtime;
 use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, ExtrinsicSender};
 use itp_primitives_cache::{GetPrimitives, GLOBAL_PRIMITIVES_CACHE};
@@ -345,60 +347,46 @@ fn attesteer_forward_ias_attestation_report_inner(
 
 	Ok(ext)
 }
-// FIXME: have the user submit a `ProofOfAttendance`
-fn fetch_reputation_inner(params: Params) -> Result<Vec<Reputation>, String> {
+
+fn personhoodoracle_parse_params(
+	params: Params,
+) -> Result<(CommunityIdentifier, CeremonyIndexType, AccountId, CeremonyIndexType), String> {
 	let hex_encoded_params = params.parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
 
 	if hex_encoded_params.len() != 4 {
 		return Err(format!(
-			"Wrong number of arguments for IAS attestation report forwarding: {}, expected: {}",
+			"Wrong number of arguments for fetch_reputation_inner: {}, expected: {}",
 			hex_encoded_params.len(),
 			1
 		))
 	}
 
 	let cid = itp_utils::hex::decode_hex(&hex_encoded_params[0]).map_err(|e| format!("{:?}", e))?;
-	println!("cid is: {:#?}", &cid);
-	let cid = str::from_utf8(&cid).map_err(|e| format!("{:?}", e))?;
-	println!("cid is: {:#?}", &cid);
 	let cid: CommunityIdentifier =
-		CommunityIdentifier::from_str(cid).map_err(|e| format!("{:?}", e))?;
-	println!("cid is: {:#?}", &cid);
+		Decode::decode(&mut cid.as_slice()).map_err(|e| format!("{:?}", e))?;
 
 	let cindex =
 		itp_utils::hex::decode_hex(&hex_encoded_params[1]).map_err(|e| format!("{:?}", e))?;
-	println!("cindex is: {:#?}", &cindex);
-	let cindex = str::from_utf8(&cindex).expect("cindex should be a valid str value");
-	println!("cindex is: {:#?}", &cindex);
-	let cindex = (cindex).parse::<u32>().expect("cid should be a valid integer value");
-	println!("cindex is: {:#?}", &cindex);
+	let cindex: CeremonyIndexType =
+		Decode::decode(&mut cindex.as_slice()).map_err(|e| format!("{:?}", e))?;
 
 	let account =
 		itp_utils::hex::decode_hex(&hex_encoded_params[2]).map_err(|e| format!("{:?}", e))?;
-	println!("account is: {:#?}", &account);
-	// if account.len() != 32 {
-	// 	return Err(format!("AccountId size is incorrect: {}, expected: {}", account.len(), 32))
-	// }
-	// let account: &[u8; 32] = account
-	// 	.as_slice()
-	// 	.try_into()
-	// 	.expect("Account vector size does not match the expected slice size.");
 
-	let account = str::from_utf8(&account).map_err(|e| format!("{:?}", e))?;
-	println!("account is: {:#?}", &account);
-	let account = AccountId::from_hex(&account).map_err(|e| format!("{:?}", e))?;
-	println!("account is: {:#?}", &account);
-	//let account = (account).map_err(|e| format!("{:?}", e))?;
-	//println!("account is: {:#?}", &account);
+	let account: AccountId =
+		Decode::decode(&mut account.as_slice()).map_err(|e| format!("{:?}", e))?;
 
 	let number_of_reputations =
 		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
-	let number_of_reputations = str::from_utf8(&number_of_reputations)
-		.expect("number_of_reputations should be a valid str value");
-	let number_of_reputations = (number_of_reputations)
-		.parse::<u32>()
-		.expect("number_of_reputations should be a valid integer value");
 
+	let number_of_reputations: CeremonyIndexType =
+		Decode::decode(&mut number_of_reputations.as_slice()).map_err(|e| format!("{:?}", e))?;
+
+	Ok((cid, cindex, account, number_of_reputations))
+}
+// FIXME: have the user submit a `ProofOfAttendance`
+fn fetch_reputation_inner(params: Params) -> Result<Vec<Reputation>, String> {
+	let (cid, cindex, account, number_of_reputations) = personhoodoracle_parse_params(params)?;
 	Ok(fetch_reputation(cid, cindex, account, number_of_reputations))
 }
 
@@ -412,49 +400,35 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 		return Err("Failed to check reputations".to_string())
 	}
 
-	let hex_encoded_params = params.parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
+	let hex_encoded_params =
+		params.clone().parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
 
-	if hex_encoded_params.len() != 5 {
+	if hex_encoded_params.len() != 6 {
 		return Err(format!(
 			"Wrong number of arguments for Nostr badge request: {}, expected: {}",
 			hex_encoded_params.len(),
 			5
 		))
 	}
-	let cid = itp_utils::hex::decode_hex(&hex_encoded_params[0]).map_err(|e| format!("{:?}", e))?;
-	let cid = str::from_utf8(&cid).expect("cid should be a valid str value");
-	let cid: CommunityIdentifier =
-		CommunityIdentifier::from_str(cid).map_err(|e| format!("{:?}", e))?;
-
-	let cindex =
-		itp_utils::hex::decode_hex(&hex_encoded_params[1]).map_err(|e| format!("{:?}", e))?;
-	let cindex = str::from_utf8(&cindex).expect("cindex should be a valid str value");
-	let cindex = (cindex).parse::<u32>().expect("cid should be a valid integer value");
-
-	let account =
-		itp_utils::hex::decode_hex(&hex_encoded_params[2]).map_err(|e| format!("{:?}", e))?;
-	if account.len() != 32 {
-		return Err(format!("AccountId size is incorrect: {}, expected: {}", account.len(), 32))
-	}
-	let account: &[u8; 32] = account
-		.as_slice()
-		.try_into()
-		.expect("Account vector size does not match the expected slice size.");
-
-	let account = AccountId::from(*account);
+	let (cid, cindex, account, _number_of_reputations) = personhoodoracle_parse_params(params)?;
 
 	let nostr_pub_key =
-		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
-	let nostr_pub_key =
-		str::from_utf8(&nostr_pub_key).expect("nostr_pub_key should be a valid str value");
-
-	let nostr_pub_key = XOnlyPublicKey::from_bech32(nostr_pub_key)
-		.expect("Nostr public key is not in bech32 format");
-
-	let nostr_relay_url =
 		itp_utils::hex::decode_hex(&hex_encoded_params[4]).map_err(|e| format!("{:?}", e))?;
+	let nostr_pub_key: String =
+		Decode::decode(&mut nostr_pub_key.as_slice()).map_err(|e| format!("{:?}", e))?;
+	let nostr_pub_key =
+		XOnlyPublicKey::from_bech32(&nostr_pub_key).map_err(|e| format!("{:?}", e))?;
+
 	let nostr_relay_url =
-		str::from_utf8(&nostr_relay_url).expect("nostr_relay_url should be a valid str value");
+		itp_utils::hex::decode_hex(&hex_encoded_params[5]).map_err(|e| format!("{:?}", e))?;
+	let nostr_relay_url: String =
+		Decode::decode(&mut nostr_relay_url.as_slice()).map_err(|e| format!("{:?}", e))?;
+
+	let nostr_issuers_private_key =
+		itp_utils::hex::decode_hex(&hex_encoded_params[6]).map_err(|e| format!("{:?}", e))?;
+	let nostr_issuers_private_key: String =
+		Decode::decode(&mut nostr_issuers_private_key.as_slice())
+			.map_err(|e| format!("{:?}", e))?;
 
 	let badge_def = create_nostr_badge_definition();
 	let award = create_nostr_badge_award(badge_def.clone(), nostr_pub_key);
@@ -462,7 +436,7 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 	let badge_def = badge_def.into_event();
 	let award = award.into_event();
 
-	send_nostr_events(vec![badge_def, award], nostr_relay_url);
+	send_nostr_events(vec![badge_def, award], &nostr_relay_url, &nostr_issuers_private_key);
 
 	let _temp_tuple = (cid, cindex, account);
 
