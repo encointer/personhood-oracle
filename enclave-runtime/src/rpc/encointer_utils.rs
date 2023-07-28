@@ -61,24 +61,9 @@ fn query_last_n_reputations(
 	current_cindex: CeremonyIndexType,
 	n: CeremonyIndexType,
 ) -> Vec<Reputation> {
-	(1..=n).map(|i| get_reputation(prover, cid, current_cindex - i)).collect()
-}
-
-fn get_reputation(
-	prover: &AccountId,
-	cid: CommunityIdentifier,
-	cindex: CeremonyIndexType,
-) -> Reputation {
-	println!("cid is :{}, cindex is: {}", cid, cindex.clone());
-	let reputation = get_storage_double_map(
-		"EncointerCeremonies",
-		"ParticipantReputation",
-		&(cid, cindex),
-		&StorageHasher::Blake2_128Concat,
-		&prover,
-		&StorageHasher::Blake2_128Concat,
-	);
-	reputation.unwrap_or(Reputation::Unverified)
+	(1..=n)
+		.map(|i| get_reputation_ocall_api(prover, cid, current_cindex - i))
+		.collect()
 }
 
 fn get_reputation_ocall_api(
