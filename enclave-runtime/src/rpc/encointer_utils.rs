@@ -14,13 +14,21 @@
 	limitations under the License.
 
 */
-use crate::Vec;
+use crate::{
+	initialization::global_components::GLOBAL_OCALL_API_COMPONENT,
+	utils::get_validator_accessor_from_solo_or_parachain, Vec,
+};
 use encointer_primitives::{
 	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
 };
 use ita_stf::helpers::get_storage_double_map;
+use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, LightClientState};
+use itp_types::storage::StorageEntryVerified;
+
+use itp_component_container::ComponentGetter;
+use itp_ocall_api::EnclaveOnChainOCallApi;
 use itp_stf_primitives::types::AccountId;
-use itp_storage::StorageHasher;
+use itp_storage::{storage_double_map_key, StorageHasher};
 use log::error;
 
 pub fn fetch_reputation(
@@ -71,4 +79,40 @@ fn get_reputation(
 		&StorageHasher::Blake2_128Concat,
 	);
 	reputation.unwrap_or(Reputation::Unverified)
+}
+
+fn get_reputation_ocall_api(
+	prover: &AccountId,
+	cid: CommunityIdentifier,
+	cindex: CeremonyIndexType,
+) -> Reputation {
+	println!("cid is :{}, cindex is: {}", cid, cindex.clone());
+	let validator_access =
+		get_validator_accessor_from_solo_or_parachain().expect("Failed to get validator access");
+	let current_parentchain_header = validator_access
+		.execute_on_validator(|v| {
+			let latest_parentchain_header = v
+				.latest_finalized_header()
+				.expect("Failed to get latest finalized block header");
+			Ok(latest_parentchain_header)
+		})
+		.expect("Failed to get current_parentchain_header");
+
+	let ocall_api = GLOBAL_OCALL_API_COMPONENT.get().expect("Failed to get OCALL API");
+	// let storage_hash = storage_double_map_key::<K, Q>(
+	let storage_hash = storage_double_map_key(
+		"EncointerCeremonies",
+		"ParticipantReputation",
+		&(cid, cindex),
+		&StorageHasher::Blake2_128Concat,
+		&prover,
+		&StorageHasher::Blake2_128Concat,
+	);
+	let key_and_value: StorageEntryVerified<Reputation> = ocall_api
+		.get_storage_verified(storage_hash, &current_parentchain_header)
+		.expect("Failed to read storage");
+	match key_and_value.value() {
+		None => Reputation::Unverified,
+		Some(v) => v.clone(),
+	}
 }
