@@ -429,14 +429,17 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 	let nostr_issuers_private_key: String =
 		Decode::decode(&mut nostr_issuers_private_key.as_slice())
 			.map_err(|e| format!("{:?}", e))?;
+	let secp = Secp256k1::new();
+	let signer_key =
+		Keys::from_sk_str(&nostr_issuers_private_key, &secp).map_err(|e| format!("{:?}", e))?;
 
-	let badge_def = create_nostr_badge_definition();
-	let award = create_nostr_badge_award(badge_def.clone(), nostr_pub_key);
+	let badge_def = create_nostr_badge_definition(&signer_key);
+	let award = create_nostr_badge_award(badge_def.clone(), nostr_pub_key, &signer_key);
 
 	let badge_def = badge_def.into_event();
 	let award = award.into_event();
 
-	send_nostr_events(vec![badge_def, award], &nostr_relay_url, &nostr_issuers_private_key)
+	send_nostr_events(vec![badge_def, award], &nostr_relay_url)
 		.map_err(|e| format!("Failed to send nostr events: {:?}", e))?;
 
 	let _temp_tuple = (cid, cindex, account);
@@ -447,18 +450,18 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 fn create_nostr_badge_award(
 	badge_definition: BadgeDefinition,
 	awarded_pub_key: XOnlyPublicKey,
+	signer_key: &Keys,
 ) -> BadgeAward {
 	let badge_definition_event = badge_definition.into_event();
 	let awarded_keys = vec![Tag::PubKey(awarded_pub_key, None)];
 
 	let secp = Secp256k1::new();
-	let keys = Keys::generate_with_secp(&secp);
 	let ts = get_ts();
 
-	nip58::BadgeAward::new(&badge_definition_event, awarded_keys, &keys, ts, &secp).unwrap()
+	nip58::BadgeAward::new(&badge_definition_event, awarded_keys, &signer_key, ts, &secp).unwrap()
 }
 
-fn create_nostr_badge_definition() -> BadgeDefinition {
+fn create_nostr_badge_definition(signer_key: &Keys) -> BadgeDefinition {
 	// Just for demo purposes, should be reworked
 	let builder = nip58::BadgeDefinitionBuilder::new("likely_person".to_owned());
 	let thumb_size = ImageDimensions(181, 151);
@@ -478,13 +481,9 @@ fn create_nostr_badge_definition() -> BadgeDefinition {
 		.image_dimensions(ImageDimensions(181, 151));
 
 	let secp = Secp256k1::new();
-	//let keys = Keys::generate_with_secp(&secp);\
-	let keys =
-		Keys::from_sk_str("nsec13wqyx0syeu7unce6d7p8x4rqqe7elpfpr9ywsl5y6x427dzj8tyq36ku2r", &secp)
-			.unwrap();
 	let ts = get_ts();
 
-	builder.build(&keys, ts, &secp).unwrap()
+	builder.build(&signer_key, ts, &secp).unwrap()
 }
 
 pub fn sidechain_io_handler<ImportFn, Error>(import_fn: ImportFn) -> IoHandler

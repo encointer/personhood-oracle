@@ -20,7 +20,7 @@ use log::info;
 use nostr::{prelude::*, types::time::TimeSupplier, Event, Timestamp};
 use tungstenite_sgx as tungstenite;
 
-use nostr::{key::FromSkStr, ClientMessage, Keys};
+use nostr::ClientMessage;
 
 use tungstenite::Message as WsMessage;
 
@@ -78,17 +78,10 @@ pub fn get_ts() -> Timestamp {
 	time_supplier.to_timestamp(now)
 }
 
-pub fn send_nostr_events(
-	events_to_send: Vec<Event>,
-	relay: &str,
-	private_key: &str,
-) -> Result<(), String> {
-	let secp = Secp256k1::new();
-	let my_keys = Keys::from_sk_str(private_key, &secp).map_err(|e| format!("{:?}", e))?;
-
+pub fn send_nostr_events(events_to_send: Vec<Event>, relay: &str) -> Result<(), String> {
 	// Connect to relay
-	let (mut socket, response) =
-		tungstenite::connect(relay).map_err(|e| format!("Can't connect to relay: {:?}", e))?;
+	let (mut socket, _response) = tungstenite::connect(relay)
+		.map_err(|e| format!("Can't connect to relay: error={:?}", e))?;
 
 	for event in events_to_send {
 		info!("sending text message with id {}", event.id.to_bech32().unwrap());
