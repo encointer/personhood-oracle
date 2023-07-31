@@ -14,15 +14,11 @@
 	limitations under the License.
 
 */
-use crate::{
-	initialization::global_components::GLOBAL_OCALL_API_COMPONENT,
-	utils::get_validator_accessor_from_solo_or_parachain, Vec,
-};
+use crate::{initialization::global_components::GLOBAL_OCALL_API_COMPONENT, Vec};
 use codec::Decode;
 use encointer_primitives::{
 	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
 };
-use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, LightClientState};
 use itp_component_container::ComponentGetter;
 use itp_ocall_api::EnclaveOnChainOCallApi;
 use itp_stf_primitives::types::AccountId;
