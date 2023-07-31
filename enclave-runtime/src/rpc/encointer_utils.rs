@@ -23,11 +23,13 @@ use encointer_primitives::{
 };
 use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, LightClientState};
 use itp_types::storage::StorageEntryVerified;
+use sp_core::crypto::Ss58Codec;
 
 use itp_component_container::ComponentGetter;
 use itp_ocall_api::EnclaveOnChainOCallApi;
 use itp_stf_primitives::types::AccountId;
 use itp_storage::{storage_double_map_key, StorageHasher};
+use itp_utils::stringify::account_id_to_string;
 use log::error;
 
 pub fn fetch_reputation(
@@ -71,6 +73,7 @@ fn get_reputation_ocall_api(
 	cindex: CeremonyIndexType,
 ) -> Reputation {
 	println!("cid is :{}, cindex is: {}", cid, cindex.clone());
+	println!("prover is :{}", prover.to_ss58check());
 	let validator_access =
 		get_validator_accessor_from_solo_or_parachain().expect("Failed to get validator access");
 	let current_parentchain_header = validator_access
@@ -89,7 +92,7 @@ fn get_reputation_ocall_api(
 		"ParticipantReputation",
 		&(cid, cindex),
 		&StorageHasher::Blake2_128Concat,
-		&prover,
+		prover,
 		&StorageHasher::Blake2_128Concat,
 	);
 	let key_and_value: StorageEntryVerified<Reputation> = ocall_api

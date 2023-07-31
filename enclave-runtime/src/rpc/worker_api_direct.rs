@@ -372,13 +372,11 @@ fn personhoodoracle_parse_params(
 
 	let account =
 		itp_utils::hex::decode_hex(&hex_encoded_params[2]).map_err(|e| format!("{:?}", e))?;
-
 	let account: AccountId =
 		Decode::decode(&mut account.as_slice()).map_err(|e| format!("{:?}", e))?;
 
 	let number_of_reputations =
 		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
-
 	let number_of_reputations: CeremonyIndexType =
 		Decode::decode(&mut number_of_reputations.as_slice()).map_err(|e| format!("{:?}", e))?;
 
