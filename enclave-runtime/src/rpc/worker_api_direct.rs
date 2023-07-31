@@ -458,7 +458,7 @@ fn create_nostr_badge_award(
 	let secp = Secp256k1::new();
 	let ts = get_ts();
 
-	nip58::BadgeAward::new(&badge_definition_event, awarded_keys, &signer_key, ts, &secp).unwrap()
+	nip58::BadgeAward::new(&badge_definition_event, awarded_keys, signer_key, ts, &secp).unwrap()
 }
 
 fn create_nostr_badge_definition(signer_key: &Keys) -> BadgeDefinition {
@@ -483,7 +483,7 @@ fn create_nostr_badge_definition(signer_key: &Keys) -> BadgeDefinition {
 	let secp = Secp256k1::new();
 	let ts = get_ts();
 
-	builder.build(&signer_key, ts, &secp).unwrap()
+	builder.build(signer_key, ts, &secp).unwrap()
 }
 
 pub fn sidechain_io_handler<ImportFn, Error>(import_fn: ImportFn) -> IoHandler

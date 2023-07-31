@@ -21,7 +21,6 @@ use crate::{
 use encointer_primitives::{
 	ceremonies::Reputation, communities::CommunityIdentifier, scheduler::CeremonyIndexType,
 };
-use ita_stf::helpers::get_storage_double_map;
 use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, LightClientState};
 use itp_types::storage::StorageEntryVerified;
 
@@ -98,6 +97,6 @@ fn get_reputation_ocall_api(
 		.expect("Failed to read storage");
 	match key_and_value.value() {
 		None => Reputation::Unverified,
-		Some(v) => v.clone(),
+		Some(v) => *v,
 	}
 }
