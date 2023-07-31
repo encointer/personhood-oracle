@@ -34,30 +34,30 @@ impl TimeSupplier for DemoTimeSupplier {
 		duration_now()
 	}
 	fn now(&self) -> <Self as TimeSupplier>::StartingPoint {
-		todo!()
+		unimplemented!()
 	}
 	fn duration_since_starting_point(
 		&self,
 		_: <Self as TimeSupplier>::StartingPoint,
 	) -> std::time::Duration {
-		todo!()
+		unimplemented!()
 	}
 	fn starting_point(&self) -> <Self as TimeSupplier>::StartingPoint {
-		todo!()
+		unimplemented!()
 	}
 	fn elapsed_instant_since(
 		&self,
 		_: <Self as TimeSupplier>::Now,
 		_: <Self as TimeSupplier>::Now,
 	) -> std::time::Duration {
-		todo!()
+		unimplemented!()
 	}
 	fn elapsed_since(
 		&self,
 		_: <Self as TimeSupplier>::StartingPoint,
 		_: <Self as TimeSupplier>::StartingPoint,
 	) -> Duration {
-		todo!()
+		unimplemented!()
 	}
 	fn as_i64(&self, _value: Duration) -> i64 {
 		now_as_secs() as i64
