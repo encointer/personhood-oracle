@@ -101,9 +101,8 @@ fn ensure_account_has_funds(api: &ParentchainApi, accountid: &AccountId32) -> Re
 	let existential_deposit = api.get_existential_deposit()?;
 	info!("Existential deposit is = {:?}", existential_deposit);
 
-	let min_required_funds = existential_deposit
-		.saturating_mul(EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS)
-		.saturating_mul(10000);
+	let min_required_funds =
+		existential_deposit.saturating_mul(EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS);
 	let missing_funds = min_required_funds.saturating_sub(free_balance);
 
 	if missing_funds > 0 {
