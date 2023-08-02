@@ -24,9 +24,12 @@ use nostr::ClientMessage;
 
 use tungstenite::Message as WsMessage;
 
-pub struct DemoTimeSupplier {}
+pub struct DemoTimeProvider;
 
-impl TimeSupplier for DemoTimeSupplier {
+/// Time related operations are rather limited in `no_std` environments, which is why the `nostr`
+/// crate provides a trait that can help `no_std` users have time related operations.
+/// Not all methods are implemented, only the necessary ones.
+impl TimeSupplier for DemoTimeProvider {
 	type Now = Duration;
 	type StartingPoint = i64;
 
