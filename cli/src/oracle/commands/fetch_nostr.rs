@@ -66,18 +66,6 @@ impl FetchNostrCmd {
 		let msg = ClientMessage::new_event(event).as_json();
 		socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
 
-		/*
-			// create channel
-			let metadata = Metadata::new()
-				.name("diddelichannel")
-				.about("I'm just testing")
-				.picture(Url::parse("https://placekitten.com/200/200").unwrap());
-			let event: Event = EventBuilder::new_channel(metadata).unwrap().to_event(&my_keys).unwrap();
-			println!("creating channel with ID {}", event.id.to_bech32().unwrap());
-			let msg = ClientMessage::new_event(event).as_json();
-
-			socket.write_message(WsMessage::Text(msg)).expect("Impossible to send message");
-		*/
 		let channel_id = ChannelId::from(
 			EventId::from_bech32("note18kst54gwje8n5t3cfpdud4duwh37wtfu4zpefd6a6q24nc2uecqs6vy8lq")
 				.unwrap(),
