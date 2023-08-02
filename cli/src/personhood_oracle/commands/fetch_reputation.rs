@@ -39,14 +39,18 @@ pub struct FetchReputationCmd {
 
 impl FetchReputationCmd {
 	pub fn run(&self, cli: &Cli) {
-		if let Ok(reputations) = self.fetch_reputation_rpc(cli) {
-			let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
-			println!("reputation for {} is: {:#?}", &self.account, reputations);
-			println!(
-				"verified reputatations number: {} out of:{}",
-				verified_reputations,
-				reputations.len()
-			);
+		match self.fetch_reputation_rpc(cli) {
+			Ok(reputations) => {
+				let verified_reputations =
+					reputations.iter().filter(|rep| rep.is_verified()).count();
+				println!("reputation for {} is: {:#?}", &self.account, reputations);
+				println!(
+					"verified reputatations number: {} out of:{}",
+					verified_reputations,
+					reputations.len()
+				);
+			},
+			Err(e) => error!("reputation fetching failed with: {:#?}", e),
 		}
 	}
 
