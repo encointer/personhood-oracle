@@ -74,7 +74,6 @@ pub fn setup_account_funding(
 
 		let min_required_funds = registration_fees
 			.saturating_mul(REGISTERING_FEE_FACTOR_FOR_INIT_FUNDS)
-			.saturating_mul(10000);
 		let missing_funds = min_required_funds.saturating_sub(free_balance);
 
 		if missing_funds > 0 {
