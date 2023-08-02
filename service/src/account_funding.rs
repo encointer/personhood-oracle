@@ -72,8 +72,8 @@ pub fn setup_account_funding(
 		let free_balance = api.get_free_balance(accountid)?;
 		info!("TEE's free balance = {:?}", free_balance);
 
-		let min_required_funds = registration_fees
-			.saturating_mul(REGISTERING_FEE_FACTOR_FOR_INIT_FUNDS);
+		let min_required_funds =
+			registration_fees.saturating_mul(REGISTERING_FEE_FACTOR_FOR_INIT_FUNDS);
 		let missing_funds = min_required_funds.saturating_sub(free_balance);
 
 		if missing_funds > 0 {
