@@ -50,6 +50,8 @@ impl FetchReputationCmd {
 		}
 	}
 
+	//TODO remove self argument, use user supplied `ProofOfAttendance` instead of fetching it
+	//TODO see issue #26
 	pub fn fetch_reputation_rpc(&self, cli: &Cli) -> Result<Vec<Reputation>, String> {
 		let api = get_chain_api(cli);
 		let direct_api = get_worker_api_direct(cli);
