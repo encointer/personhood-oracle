@@ -59,8 +59,14 @@ fn get_reputation_ocall_api(
 	cindex: CeremonyIndexType,
 ) -> Reputation {
 	println!("cid is :{}, cindex is: {}", cid, cindex.clone());
+    let unverified_reputation = Reputation::Unverified;
 
-	let ocall_api = GLOBAL_OCALL_API_COMPONENT.get().expect("Failed to get OCALL API");
+	let ocall_api = GLOBAL_OCALL_API_COMPONENT.get();
+    if let Err(e) = ocall_api {
+        error!("failed to get OCALL API");
+            return unverified_reputation;
+    }
+    let ocall_api = ocall_api.expect("Failed to get OCALL API, but it should have succeded.");
 	let storage_hash = storage_double_map_key(
 		"EncointerCeremonies",
 		"ParticipantReputation",
@@ -74,10 +80,17 @@ fn get_reputation_ocall_api(
 	let requests = vec![WorkerRequest::ChainStorage(storage_hash, None)];
 	let mut resp: Vec<WorkerResponse<Vec<u8>>> = match ocall_api.worker_request(requests) {
 		Ok(response) => response,
-		Err(e) => panic!("Worker response decode failed. Error: {:?}", e),
+		Err(e) => {
+            error!("Worker response decode failed. Error: {:?}", e);
+            return unverified_reputation;
+        }
 	};
 
-	let first = resp.pop().expect("Worker should have responded");
+	let first = resp.pop().map_err(
+        |e| {
+            error!("Worker should have responded, error: {:#?}", e);
+            return unverified_reputation;
+        },);
 	println!("Worker response: {:?}", first);
 
 	let (_key, value, _proof) = match first {
