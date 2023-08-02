@@ -28,7 +28,6 @@ pub struct DemoTimeProvider;
 
 /// Time related operations are rather limited in `no_std` environments, which is why the `nostr`
 /// crate provides a trait that can help `no_std` users have time related operations.
-/// Not all methods are implemented, only the necessary ones.
 impl TimeSupplier for DemoTimeProvider {
 	type Now = Duration;
 	type StartingPoint = i64;
@@ -70,8 +69,8 @@ impl TimeSupplier for DemoTimeProvider {
 	}
 }
 
-pub fn get_time_supplier() -> DemoTimeSupplier {
-	DemoTimeSupplier {}
+pub fn get_time_supplier() -> DemoTimeProvider {
+	DemoTimeProvider {}
 }
 
 pub fn get_ts() -> Timestamp {

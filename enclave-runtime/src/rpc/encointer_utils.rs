@@ -63,7 +63,7 @@ fn get_reputation_ocall_api(
 
 	let ocall_api = GLOBAL_OCALL_API_COMPONENT.get();
 	if let Err(e) = ocall_api {
-		error!("failed to get OCALL API");
+		error!("failed to get OCALL API, error: {:#?}", e);
 		return unverified_reputation
 	}
 	let ocall_api = ocall_api.expect("Failed to get OCALL API, but it should have succeded.");
@@ -86,10 +86,13 @@ fn get_reputation_ocall_api(
 		},
 	};
 
-	let first = resp.pop().map_err(|e| {
-		error!("Worker should have responded, error: {:#?}", e);
-		return unverified_reputation
-	});
+	let first = match resp.pop() {
+		None => {
+			error!("Worker should have responded, but it did not.");
+			return unverified_reputation
+		},
+		Some(response) => response,
+	};
 	println!("Worker response: {:?}", first);
 
 	let (_key, value, _proof) = match first {
