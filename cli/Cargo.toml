@@ -34,7 +34,7 @@ substrate-client-keystore = { git = "https://github.com/scs/substrate-api-client
 teerex-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
 
 encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", features = ["full_crypto"] }
-# TEMP
+# TODO switch to upstream once `no_std` compatible, see issue #25
 nostr = { default-features = false, features = ["alloc", "nip19"], git = "https://github.com/OverOrion/nostr", branch = "no_std_upstream_working" }
 tungstenite = { version = "0.15.0", features = ["rustls-tls-webpki-roots"] }
 

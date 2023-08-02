@@ -73,6 +73,7 @@ primitive-types = { version = "0.12.1", default-features = false, features = ["c
 
 # nostr
 encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", default-features = false, features = ["full_crypto"] }
+# TODO switch to upstream once `no_std` compatible, see issue #25
 nostr = { default-features = false, features = ["alloc", "nip19"], git = "https://github.com/OverOrion/nostr", branch = "no_std_upstream_working" }
 secp256k1 = { version = "0.24", default-features = false, features = ["alloc", "serde"] }
 tungstenite_sgx = { package = "tungstenite", features = ["rustls-tls-webpki-roots"], git = "https://github.com/integritee-network/tungstenite-rs-sgx", branch = "sgx-experimental" }
