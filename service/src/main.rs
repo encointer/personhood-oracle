@@ -16,7 +16,7 @@
 */
 
 #![cfg_attr(test, feature(assert_matches))]
-#![allow(clippy::redundant_closure_call)]
+#![allow(clippy::redundant_closure_call)] // See issue #27
 
 #[cfg(feature = "teeracle")]
 use crate::teeracle::schedule_periodic_reregistration_thread;
