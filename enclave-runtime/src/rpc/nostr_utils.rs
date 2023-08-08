@@ -86,12 +86,12 @@ pub fn send_nostr_events(events_to_send: Vec<Event>, relay: &str) -> Result<(), 
 		.map_err(|e| format!("Can't connect to relay: error={:?}", e))?;
 
 	for event in events_to_send {
-		info!("sending text message with id {}", event.id.to_bech32().unwrap());
+		info!("sending nostr message with id {}", event.id.to_bech32().unwrap());
 
 		let msg = ClientMessage::new_event(event).as_json();
 		socket
 			.write_message(WsMessage::Text(msg))
-			.map_err(|e| format!("sendind nostr events failed: {:?}", e))?;
+			.map_err(|e| format!("sending nostr events failed: {:?}", e))?;
 	}
 	Ok(())
 }

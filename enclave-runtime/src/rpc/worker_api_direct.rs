@@ -62,6 +62,7 @@ use std::{
 	sync::Arc,
 	vec::Vec,
 };
+use log::*;
 
 fn compute_hex_encoded_return_error(error_msg: &str) -> String {
 	RpcReturnValue::from_error_message(error_msg).to_hex()
@@ -385,10 +386,12 @@ fn personhoodoracle_parse_params(
 // FIXME: have the user submit a `ProofOfAttendance`
 fn fetch_reputation_inner(params: Params) -> Result<Vec<Reputation>, String> {
 	let (cid, cindex, account, number_of_reputations) = personhoodoracle_parse_params(params)?;
+	trace!("reputation for account {:?} is {}", account, number_of_reputations);
 	Ok(fetch_reputation(cid, cindex, account, number_of_reputations))
 }
 
 fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
+	trace!("evaluating reputation to maybe issue a nostr badge");
 	// Check reputation first - will be change later to have the user submit their `ProofOfAttendance`
 
 	let reputations = fetch_reputation_inner(params.clone())?;
@@ -432,11 +435,12 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 		Keys::from_sk_str(&nostr_issuers_private_key, &secp).map_err(|e| format!("{:?}", e))?;
 
 	let badge_def = create_nostr_badge_definition(&signer_key);
+	trace!("nostr badge definition {:?}", badge_def);
 	let award = create_nostr_badge_award(badge_def.clone(), nostr_pub_key, &signer_key);
-
+	trace!("nostr badge award {:?}", award);
 	let badge_def = badge_def.into_event();
 	let award = award.into_event();
-
+	trace!("sending to nostr relay at {}", nostr_relay_url);
 	send_nostr_events(vec![badge_def, award], &nostr_relay_url)
 		.map_err(|e| format!("Failed to send nostr events: {:?}", e))?;
 
