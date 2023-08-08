@@ -404,11 +404,11 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 	let hex_encoded_params =
 		params.clone().parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
 
-	if hex_encoded_params.len() != 6 {
+	if hex_encoded_params.len() < 6 {
 		return Err(format!(
 			"Wrong number of arguments for Nostr badge request: {}, expected: {}",
 			hex_encoded_params.len(),
-			5
+			6
 		))
 	}
 	let (cid, cindex, account, _number_of_reputations) = personhoodoracle_parse_params(params)?;
