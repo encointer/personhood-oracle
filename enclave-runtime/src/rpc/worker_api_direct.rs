@@ -354,7 +354,7 @@ fn personhoodoracle_parse_params(
 ) -> Result<(CommunityIdentifier, CeremonyIndexType, AccountId, CeremonyIndexType), String> {
 	let hex_encoded_params = params.parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
 
-	if hex_encoded_params.len() != 4 {
+	if hex_encoded_params.len() < 4 {
 		return Err(format!(
 			"Wrong number of arguments for fetch_reputation_inner: {}, expected: {}",
 			hex_encoded_params.len(),
