@@ -398,7 +398,7 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 	let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
 
 	if verified_reputations == 0 {
-		return Err("The user does not havy any reputation".to_string())
+		return Err("The user does not have any reputation".to_string())
 	}
 
 	let hex_encoded_params =
