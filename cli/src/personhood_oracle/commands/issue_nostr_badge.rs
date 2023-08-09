@@ -15,11 +15,13 @@ use crate::{
 	command_utils::{get_accountid_from_str, get_chain_api, get_worker_api_direct},
 	Cli,
 };
-use codec::Encode;
+use codec::{Decode, Encode};
 use encointer_primitives::{communities::CommunityIdentifier, scheduler::CeremonyIndexType};
 use itc_rpc_client::direct_client::DirectApi;
 use itp_rpc::{RpcRequest, RpcResponse, RpcReturnValue};
+use itp_types::DirectRequestStatus;
 use itp_utils::FromHexPrefixed;
+use log::*;
 use nostr::{
 	key::FromSkStr,
 	prelude::{FromBech32, Secp256k1, XOnlyPublicKey},
@@ -90,9 +92,23 @@ impl IssueNostrBadgeCmd {
 		let Ok(rpc_response) = serde_json::from_str::<RpcResponse>(&rpc_response_str) else {
 			panic!("Can't parse RPC response: '{rpc_response_str}'");
 		};
-		let _rpc_return_value = match RpcReturnValue::from_hex(&rpc_response.result) {
+		let rpc_return_value = match RpcReturnValue::from_hex(&rpc_response.result) {
 			Ok(rpc_return_value) => rpc_return_value,
 			Err(e) => panic!("Failed to decode RpcReturnValue: {:?}", e),
 		};
+
+		match rpc_return_value.status {
+			DirectRequestStatus::Ok => {
+				println!("Nostr badge issued.");
+			},
+			_ => {
+				let error_msg = "Nostr badge issuing failed";
+				error!("{}", &error_msg);
+				let inner_error_msg: String =
+					Decode::decode(&mut rpc_return_value.value.as_slice())
+						.expect("Failed to decode Nostr badge issuing RPC error msg");
+				error!("Nostr badge issuing failed: {:#?}", &inner_error_msg);
+			},
+		}
 	}
 }
