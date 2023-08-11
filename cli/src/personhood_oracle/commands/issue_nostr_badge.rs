@@ -45,7 +45,6 @@ use crate::personhood_oracle::commands::fetch_reputation::get_ceremony_index;
 
 impl IssueNostrBadgeCmd {
 	pub fn run(&self, cli: &Cli) {
-		//todo!();
 		let api = get_chain_api(cli);
 		let direct_api = get_worker_api_direct(cli);
 		let cindex = get_ceremony_index(&api);

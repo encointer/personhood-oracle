@@ -108,3 +108,84 @@ fn get_reputation_ocall_api(
 		},
 	}
 }
+
+fn commitment_already_there(commitment_purpose: &DescriptorType) -> Result<bool, String> {
+	let ocall_api = GLOBAL_OCALL_API_COMPONENT.get();
+	if let Err(e) = ocall_api {
+		Err(error!("failed to get OCALL API, error: {:#?}", e))
+	}
+	let ocall_api = ocall_api.expect("Failed to get OCALL API, but it should have succeded.");
+	let storage_hash = storage_value_key("encointerReputationCommitments", "currentPurposeId");
+	println!("storage_hash is :{:#?}", &storage_hash);
+
+	let requests = vec![WorkerRequest::ChainStorage(storage_hash, None)];
+	let mut resp: Vec<WorkerResponse<Vec<u8>>> = match ocall_api.worker_request(requests) {
+		Ok(response) => response,
+		Err(e) => Err(error!("Worker response decode failed. Error: {:?}", e)),
+	};
+
+	let first = match resp.pop() {
+		None => {
+			error!("Worker should have responded, but it did not.");
+		},
+		Some(response) => response,
+	};
+	println!("Worker response: {:?}", first);
+
+	let (_key, value, _proof) = match first {
+		WorkerResponse::ChainStorage(storage_key, value, proof) => (storage_key, value, proof),
+	};
+
+	let current_purpose_id: PurposeIdType = value;
+
+	for i in 0..=current_purpose_id {
+		let storage_hash = storage_map_key("encointerReputationCommitments", "purposes", i);
+		println!("storage_hash is :{:#?}", &storage_hash);
+
+		let requests = vec![WorkerRequest::ChainStorage(storage_hash, None)];
+		let mut resp: Vec<WorkerResponse<Vec<u8>>> = match ocall_api.worker_request(requests) {
+			Ok(response) => response,
+			Err(e) => {
+				error!("Worker response decode failed. Error: {:?}", e);
+				return unverified_reputation
+			},
+		};
+
+		let first = match resp.pop() {
+			None => {
+				error!("Worker should have responded, but it did not.");
+				return unverified_reputation
+			},
+			Some(response) => response,
+		};
+		println!("Worker response: {:?}", first);
+
+		let (_key, value, _proof) = match first {
+			WorkerResponse::ChainStorage(storage_key, value, proof) => (storage_key, value, proof),
+		};
+
+		match value {
+			None => (),
+			Some(val) => {
+				let current_commitment_purpose: DescriptorType = Decode::decode(&mut v.as_slice())
+					.expect("Failed to decode value after fetching");
+				if let commitment_purpose = current_commitment_purpose {
+					return Ok(true)
+				}
+			},
+		}
+	}
+
+	Ok(false);
+}
+
+fn register_commitment_purpose() -> Result<(), String> {
+	let nostr_commitment_purpose = "nostr-badge";
+	let nostr_commitment_purpose = DescriptorType::from_str(&nostr_commitment_purpose).unwrap();
+
+	let is_commitment_already_there = commitment_already_there(&nostr_commitment_purpose)?;
+
+	if !is_commitment_already_there {
+		//TODO register here
+	}
+}
