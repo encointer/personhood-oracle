@@ -44,6 +44,7 @@ use itp_utils::{FromHexPrefixed, ToHexPrefixed};
 use its_primitives::types::block::SignedBlock;
 use its_sidechain::rpc_handler::{direct_top_pool_api, import_block_api};
 use jsonrpc_core::{serde_json::json, IoHandler, Params, Value};
+use log::*;
 use nostr::{
 	key::FromSkStr,
 	nips::{
@@ -62,7 +63,6 @@ use std::{
 	sync::Arc,
 	vec::Vec,
 };
-use log::*;
 
 fn compute_hex_encoded_return_error(error_msg: &str) -> String {
 	RpcReturnValue::from_error_message(error_msg).to_hex()
