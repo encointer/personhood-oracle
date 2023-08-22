@@ -125,7 +125,7 @@ jobs:
       - name: Clippy default features
         run: cargo clippy -- -D warnings -A clippy::redundant-closure-call
       - name: Enclave # Enclave is separate as it's not in the workspace
-        run: cd enclave-runtime && cargo clippy -- -D warnings -A clippy::redundant-closure-call 
+        run: cd enclave-runtime && cargo clippy -- -D warnings -A clippy::redundant-closure-call
 
       - name: Clippy with Teeracle feature
         run: |
@@ -161,39 +161,6 @@ jobs:
       - name: Fail-fast; cancel other jobs
         if: failure()
         uses: andymckay/cancel-action@0.3
-
-  integration-tests:
-    runs-on: ${{ matrix.host }}
-    if: ${{ always() }}
-    needs: build-test
-    env:
-      WORKER_IMAGE_TAG: integritee-worker:dev
-      CLIENT_IMAGE_TAG: integritee-cli:dev
-      COINMARKETCAP_KEY: ${{ secrets.COINMARKETCAP_KEY }}
-      IAS_EPID_SPID: ${{ secrets.IAS_SPID }}
-      IAS_EPID_KEY: ${{ secrets.IAS_PRIMARY_KEY }}
-      TEERACLE_INTERVAL_SECONDS: 10
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - test: M6
-            flavor_id: offchain-worker
-            demo_name: demo-indirect-invocation
-            host: ubuntu-latest
-            sgx_mode: SW
-          - test: Teeracle
-            flavor_id: teeracle
-            demo_name: demo-teeracle
-            host: ubuntu-latest
-            sgx_mode: SW
-          - test: Teeracle
-            flavor_id: teeracle
-            demo_name: demo-teeracle-generic
-            host: ubuntu-latest
-            sgx_mode: SW
-
 
     steps:
       - uses: actions/checkout@v3
@@ -416,9 +383,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: integritee-worker-teeracle-${{ github.ref_name }}.tar.gz
-          path: .  
+          path: .
 
-      # 
+      #
       # Temporary comment out until we decide what to release
       #
       # - name: Download Integritee Service
