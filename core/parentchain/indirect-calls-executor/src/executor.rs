@@ -325,7 +325,7 @@ mod test {
 
 		let mr_enclave = [33u8; 32];
 		let (indirect_calls_executor, top_pool_author, shielding_key_repo) =
-			test_fixtures(mr_enclave.clone(), NodeMetadataMock::new());
+			test_fixtures(mr_enclave, NodeMetadataMock::new());
 		let shielding_key = shielding_key_repo.retrieve_key().unwrap();
 
 		let opaque_extrinsic = OpaqueExtrinsic::from_bytes(

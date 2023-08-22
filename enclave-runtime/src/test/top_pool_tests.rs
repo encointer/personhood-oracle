@@ -40,10 +40,7 @@ use itc_parentchain::indirect_calls_executor::{
 };
 use itc_parentchain_test::{ParentchainBlockBuilder, ParentchainHeaderBuilder};
 use itp_node_api::{
-	api_client::{
-		ExtrinsicParams, ParentchainAdditionalParams, ParentchainExtrinsicParams,
-		ParentchainUncheckedExtrinsic,
-	},
+	api_client::{ExtrinsicParams, ParentchainExtrinsicParams, ParentchainUncheckedExtrinsic},
 	metadata::{
 		metadata_mocks::NodeMetadataMock, pallet_teerex::TeerexCallIndexes,
 		provider::NodeMetadataRepository,
@@ -179,13 +176,8 @@ fn create_shielding_call_extrinsic<ShieldingKey: ShieldingCryptoEncrypt>(
 	let test_signer = ed25519::Pair::from_seed(b"33345678901234567890123456789012");
 	let signature = test_signer.sign(&[0u8]);
 
-	let default_extra_for_test = ParentchainExtrinsicParams::new(
-		0,
-		0,
-		0,
-		H256::default(),
-		ParentchainAdditionalParams::default(),
-	);
+	let default_extra_for_test =
+		ParentchainExtrinsicParams::new(0, 0, 0, H256::default(), Default::default());
 
 	let dummy_node_metadata = NodeMetadataMock::new();
 

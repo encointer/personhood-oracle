@@ -45,15 +45,6 @@ lazy_static! {
 			.unwrap();
 }
 
-pub(super) fn increment_number_of_request_failures() {
-	NUMBER_OF_REQUEST_FAILURES.inc();
-}
-
-pub(super) fn set_extrinsics_inclusion_success(is_successful: bool) {
-	let success_values = i64::from(is_successful);
-	EXTRINSIC_INCLUSION_SUCCESS.set(success_values);
-}
-
 pub fn update_teeracle_metrics(metric: ExchangeRateOracleMetric) -> ServiceResult<()> {
 	match metric {
 		ExchangeRateOracleMetric::ExchangeRate(source, trading_pair, exchange_rate) =>

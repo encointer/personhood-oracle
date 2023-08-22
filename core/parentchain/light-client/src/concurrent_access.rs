@@ -128,7 +128,7 @@ mod tests {
 		let seal = LightValidationStateSealMock::new();
 		let accessor = TestAccessor::new(validator_mock, seal);
 
-		let _read_result = accessor.execute_on_validator(|_v| Ok(())).unwrap();
-		let _write_result = accessor.execute_mut_on_validator(|_v| Ok(())).unwrap();
+		accessor.execute_on_validator(|_v| Ok(())).unwrap();
+		accessor.execute_mut_on_validator(|_v| Ok(())).unwrap();
 	}
 }

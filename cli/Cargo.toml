@@ -25,13 +25,18 @@ thiserror = "1.0"
 ws = { version = "0.9.1", features = ["ssl"] }
 
 # scs / integritee
-my-node-runtime = { package = "integritee-node-runtime", git = "https://github.com/integritee-network/integritee-node.git", branch = "polkadot-v0.9.42" }
+my-node-runtime = { package = "encointer-node-notee-runtime", git = "https://github.com/encointer/encointer-node.git", branch = "szp/community-sidechain-update" }
 pallet-evm = { optional = true, git = "https://github.com/integritee-network/frontier.git", branch = "bar/polkadot-v0.9.42" }
 pallet-teerex = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
 # `default-features = false` to remove the jsonrpsee dependency.
 substrate-api-client = { default-features = false, features = ["std", "ws-client"], git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
 substrate-client-keystore = { git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
 teerex-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
+
+encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", features = ["full_crypto"] }
+# TODO switch to upstream once `no_std` compatible, see issue #25
+nostr = { default-features = false, features = ["alloc", "nip19"], git = "https://github.com/OverOrion/nostr", branch = "no_std_upstream_working" }
+tungstenite = { version = "0.15.0", features = ["rustls-tls-webpki-roots"] }
 
 # substrate dependencies
 frame-system = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -50,6 +55,7 @@ itp-node-api = { path = "../core-primitives/node-api" }
 itp-rpc = { path = "../core-primitives/rpc" }
 itp-sgx-crypto = { path = "../core-primitives/sgx/crypto" }
 itp-stf-primitives = { path = "../core-primitives/stf-primitives" }
+itp-storage = { path = "../core-primitives/storage" }
 itp-time-utils = { path = "../core-primitives/time-utils" }
 itp-types = { path = "../core-primitives/types" }
 itp-utils = { path = "../core-primitives/utils" }

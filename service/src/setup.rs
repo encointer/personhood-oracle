@@ -133,7 +133,7 @@ mod tests {
 
 		fs::create_dir_all(&root_directory.join(LIGHT_CLIENT_DB_PATH)).unwrap();
 
-		purge_files(&root_directory).unwrap();
+		purge_files(root_directory).unwrap();
 
 		assert!(!shards_path.exists());
 		assert!(!sidechain_db_path.exists());
@@ -147,7 +147,7 @@ mod tests {
 		));
 		let root_directory = test_directory_handle.path();
 
-		assert!(purge_files(&root_directory).is_ok());
+		assert!(purge_files(root_directory).is_ok());
 	}
 
 	/// Directory handle to automatically initialize a directory

@@ -16,9 +16,10 @@
 */
 
 #![cfg_attr(test, feature(assert_matches))]
+#![allow(clippy::redundant_closure_call)] // See issue #27
 
 #[cfg(feature = "teeracle")]
-use crate::teeracle::{schedule_periodic_reregistration_thread, start_periodic_market_update};
+use crate::teeracle::schedule_periodic_reregistration_thread;
 
 #[cfg(not(feature = "dcap"))]
 use crate::utils::check_files;
@@ -326,7 +327,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	let tokio_handle = tokio_handle_getter.get_handle();
 
 	#[cfg(feature = "teeracle")]
-	let teeracle_tokio_handle = tokio_handle.clone();
+	let _teeracle_tokio_handle = tokio_handle.clone();
 
 	// ------------------------------------------------------------------------
 	// Get the public key of our TEE.
@@ -368,6 +369,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	// Start trusted worker rpc server
 	if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain
 		|| WorkerModeProvider::worker_mode() == WorkerMode::OffChainWorker
+		|| WorkerModeProvider::worker_mode() == WorkerMode::Teeracle
 	{
 		let direct_invocation_server_addr = config.trusted_worker_url_internal();
 		let enclave_for_direct_invocation = enclave.clone();
@@ -481,13 +483,6 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 		schedule_periodic_reregistration_thread(
 			send_register_xt,
 			run_config.reregister_teeracle_interval(),
-		);
-
-		start_periodic_market_update(
-			&node_api,
-			run_config.teeracle_update_interval(),
-			enclave.as_ref(),
-			&teeracle_tokio_handle,
 		);
 	}
 
@@ -636,63 +631,6 @@ fn print_events(events: Vec<Event>) {
 						trace!("Ignoring unsupported pallet_teerex event");
 					},
 				}
-			},
-			#[cfg(feature = "teeracle")]
-			RuntimeEvent::Teeracle(re) => {
-				debug!("{:?}", re);
-				match &re {
-					my_node_runtime::pallet_teeracle::Event::ExchangeRateUpdated(
-						source,
-						currency,
-						new_value,
-					) => {
-						println!("[+] Received ExchangeRateUpdated event");
-						println!("    Data source:  {}", source);
-						println!("    Currency:  {}", currency);
-						println!("    Exchange rate: {:?}", new_value);
-					},
-					my_node_runtime::pallet_teeracle::Event::ExchangeRateDeleted(
-						source,
-						currency,
-					) => {
-						println!("[+] Received ExchangeRateDeleted event");
-						println!("    Data source:  {}", source);
-						println!("    Currency:  {}", currency);
-					},
-					my_node_runtime::pallet_teeracle::Event::AddedToWhitelist(
-						source,
-						mrenclave,
-					) => {
-						println!("[+] Received AddedToWhitelist event");
-						println!("    Data source:  {}", source);
-						println!("    Currency:  {:?}", mrenclave);
-					},
-					my_node_runtime::pallet_teeracle::Event::RemovedFromWhitelist(
-						source,
-						mrenclave,
-					) => {
-						println!("[+] Received RemovedFromWhitelist event");
-						println!("    Data source:  {}", source);
-						println!("    Currency:  {:?}", mrenclave);
-					},
-					_ => {
-						trace!("Ignoring unsupported pallet_teeracle event");
-					},
-				}
-			},
-			#[cfg(feature = "sidechain")]
-			RuntimeEvent::Sidechain(re) => match &re {
-				my_node_runtime::pallet_sidechain::Event::ProposedSidechainBlock(
-					sender,
-					payload,
-				) => {
-					info!("[+] Received ProposedSidechainBlock event");
-					debug!("    From:    {:?}", sender);
-					debug!("    Payload: {:?}", hex::encode(payload));
-				},
-				_ => {
-					trace!("Ignoring unsupported pallet_sidechain event");
-				},
 			},
 			_ => {
 				trace!("Ignoring event {:?}", evr);

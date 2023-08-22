@@ -20,7 +20,7 @@ use crate::{base_cli::BaseCommand, trusted_cli::TrustedCli, Cli, CliResult, CliR
 use clap::Subcommand;
 
 #[cfg(feature = "teeracle")]
-use crate::oracle::OracleCommand;
+use crate::personhood_oracle::PersonhoodOracleCommand;
 
 use crate::attesteer::AttesteerCommand;
 
@@ -33,26 +33,23 @@ pub enum Commands {
 	#[clap(after_help = "stf subcommands depend on the stf crate this has been built against")]
 	Trusted(TrustedCli),
 
-	/// Subcommands for the oracle.
-	#[cfg(feature = "teeracle")]
-	#[clap(subcommand)]
-	Oracle(OracleCommand),
-
 	/// Subcommand for the attesteer.
 	#[clap(subcommand)]
 	Attesteer(AttesteerCommand),
+
+	/// Subcommand for the personhood oracle.
+	#[cfg(feature = "teeracle")]
+	#[clap(subcommand)]
+	PersonhoodOracle(PersonhoodOracleCommand),
 }
 
 pub fn match_command(cli: &Cli) -> CliResult {
 	match &cli.command {
 		Commands::Base(cmd) => cmd.run(cli),
 		Commands::Trusted(trusted_cli) => trusted_cli.run(cli),
+		Commands::Attesteer(_) => Ok(CliResultOk::None),
 		#[cfg(feature = "teeracle")]
-		Commands::Oracle(cmd) => {
-			cmd.run(cli);
-			Ok(CliResultOk::None)
-		},
-		Commands::Attesteer(cmd) => {
+		Commands::PersonhoodOracle(cmd) => {
 			cmd.run(cli);
 			Ok(CliResultOk::None)
 		},
