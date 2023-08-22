@@ -61,12 +61,12 @@ its-storage = { path = "../sidechain/storage" }
 # scs / integritee
 
 my-node-runtime = { package = "encointer-node-notee-runtime", git = "https://github.com/encointer/encointer-node.git", branch = "szp/community-sidechain-update" }
+encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", default-features = false, optional = true, features = ["full_crypto"] }
 sgx-verify = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
 # `default-features = false` to remove the jsonrpsee dependency.
+enclave-bridge-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
 substrate-api-client = { default-features = false, features = ["std", "ws-client"], git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
 teerex-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
-
-encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", default-features = false, optional = true, features = ["full_crypto"] }
 
 # Substrate dependencies
 frame-support = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -85,7 +85,7 @@ offchain-worker = ["itp-settings/offchain-worker"]
 production = ["itp-settings/production"]
 teeracle = ["itp-settings/teeracle", "encointer-primitives"]
 dcap = []
-attesteer = []
+attesteer = ["dcap"]
 
 [dev-dependencies]
 # crates.io

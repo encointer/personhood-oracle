@@ -24,19 +24,18 @@ sgx_crypto_helper = { branch = "master", git = "https://github.com/apache/teacla
 thiserror = "1.0"
 ws = { version = "0.9.1", features = ["ssl"] }
 
-# scs / integritee
 my-node-runtime = { package = "encointer-node-notee-runtime", git = "https://github.com/encointer/encointer-node.git", branch = "szp/community-sidechain-update" }
-pallet-evm = { optional = true, git = "https://github.com/integritee-network/frontier.git", branch = "bar/polkadot-v0.9.42" }
-pallet-teerex = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
-# `default-features = false` to remove the jsonrpsee dependency.
-substrate-api-client = { default-features = false, features = ["std", "ws-client"], git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
-substrate-client-keystore = { git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
-teerex-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
-
 encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", features = ["full_crypto"] }
 # TODO switch to upstream once `no_std` compatible, see issue #25
 nostr = { default-features = false, features = ["alloc", "nip19"], git = "https://github.com/OverOrion/nostr", branch = "no_std_upstream_working" }
 tungstenite = { version = "0.15.0", features = ["rustls-tls-webpki-roots"] }
+
+pallet-enclave-bridge = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
+pallet-evm = { optional = true, git = "https://github.com/integritee-network/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-teerex = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
+enclave-bridge-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
+substrate-api-client = { default-features = false, features = ["std", "ws-client"], git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
+substrate-client-keystore = { git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
 
 # substrate dependencies
 frame-system = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -67,3 +66,5 @@ teeracle = []
 sidechain = []
 offchain-worker = []
 production = []
+# dcap feature flag is not used in this crate, but for easier build purposes only it present here as well
+dcap = []
