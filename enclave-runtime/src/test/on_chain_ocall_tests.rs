@@ -35,7 +35,7 @@ fn test_ocall_worker_request() {
 	};
 
 	let first = resp.pop().unwrap();
-	info!("Worker response: {:?}", first);
+	trace!("Worker response: {:?}", first);
 
 	let (total_issuance, proof) = match first {
 		WorkerResponse::ChainStorage(_storage_key, value, proof) => (value, proof),

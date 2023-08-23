@@ -25,7 +25,7 @@ use itp_rpc::{RpcRequest, RpcResponse, RpcReturnValue};
 
 use itp_types::DirectRequestStatus;
 use itp_utils::FromHexPrefixed;
-use log::error;
+use log::*;
 
 use std::str::FromStr;
 use substrate_api_client::GetStorage;
@@ -70,7 +70,7 @@ impl FetchReputationCmd {
 			account.encode(),
 			self.number_of_reputations.encode(),
 		];
-		println!("rpc_params is : {:#?}", &rpc_params);
+		trace!("rpc_params is : {:?}", &rpc_params);
 
 		let rpc_params: Vec<String> = rpc_params
 			.into_iter()
@@ -87,13 +87,13 @@ impl FetchReputationCmd {
 		let Ok(rpc_response) = serde_json::from_str::<RpcResponse>(&rpc_response_str) else {
 			panic!("Can't parse RPC response: '{rpc_response_str}'");
 		};
-		println!("rpc_response is : {:#?}", &rpc_response);
+		println!("rpc_response is : {:?}", &rpc_response);
 		let rpc_return_value = match RpcReturnValue::from_hex(&rpc_response.result) {
 			Ok(rpc_return_value) => rpc_return_value,
 			Err(e) => panic!("Failed to decode RpcReturnValue: {:?}", e),
 		};
 
-		println!("rpc_return_value is : {:#?}", &rpc_return_value);
+		println!("rpc_return_value is : {:?}", &rpc_return_value);
 
 		match rpc_return_value.status {
 			DirectRequestStatus::Ok => {

@@ -24,21 +24,15 @@ use itp_ocall_api::EnclaveOnChainOCallApi;
 use itp_stf_primitives::types::AccountId;
 use itp_storage::{storage_double_map_key, StorageHasher};
 use itp_types::{WorkerRequest, WorkerResponse};
-use log::error;
+use log::*;
+use std::cmp::min;
 
 pub fn fetch_reputation(
 	cid: CommunityIdentifier,
 	cindex: CeremonyIndexType,
 	account: AccountId,
-	number_of_reputations: CeremonyIndexType,
 ) -> Vec<Reputation> {
-	if cindex < number_of_reputations {
-		error!(
-			"current ceremony index is {}, can't fetch last {} ceremonies.",
-			cindex, number_of_reputations
-		);
-		return vec![]
-	}
+	let number_of_reputations = min(5, cindex);
 	query_last_n_reputations(&account, cid, cindex, number_of_reputations)
 }
 
@@ -58,7 +52,7 @@ fn get_reputation_ocall_api(
 	cid: CommunityIdentifier,
 	cindex: CeremonyIndexType,
 ) -> Reputation {
-	println!("cid is :{}, cindex is: {}", cid, cindex.clone());
+	println!("requesting reputation for {:?}: cid is :{}, cindex is: {}", prover, cid, cindex.clone());
 	let unverified_reputation = Reputation::Unverified;
 
 	let ocall_api = GLOBAL_OCALL_API_COMPONENT.get();
@@ -75,7 +69,7 @@ fn get_reputation_ocall_api(
 		prover,
 		&StorageHasher::Blake2_128Concat,
 	);
-	println!("storage_hash is :{:#?}", &storage_hash);
+	trace!("storage_hash is : {}", hex::encode(storage_hash.clone()));
 
 	let requests = vec![WorkerRequest::ChainStorage(storage_hash, None)];
 	let mut resp: Vec<WorkerResponse<Vec<u8>>> = match ocall_api.worker_request(requests) {
@@ -93,7 +87,7 @@ fn get_reputation_ocall_api(
 		},
 		Some(response) => response,
 	};
-	println!("Worker response: {:?}", first);
+	trace!("Worker response: {:?}", first);
 
 	let (_key, value, _proof) = match first {
 		WorkerResponse::ChainStorage(storage_key, value, proof) => (storage_key, value, proof),

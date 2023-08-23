@@ -218,9 +218,9 @@ where
 	let personhoodoracle_issue_nostr_badge: &str = "personhoodoracle_issueNostrBadge";
 	io.add_sync_method(personhoodoracle_issue_nostr_badge, move |params: Params| {
 		let json_value = match issue_nostr_badge_inner(params) {
-			Ok(val) => RpcReturnValue {
+			Ok(id) => RpcReturnValue {
 				do_watch: false,
-				value: val.encode(),
+				value: id.as_bytes().to_vec(),
 				status: DirectRequestStatus::Ok,
 			}
 			.to_hex(),
@@ -351,7 +351,7 @@ fn attesteer_forward_ias_attestation_report_inner(
 
 fn personhoodoracle_parse_params(
 	params: Params,
-) -> Result<(CommunityIdentifier, CeremonyIndexType, AccountId, CeremonyIndexType), String> {
+) -> Result<(CommunityIdentifier, CeremonyIndexType, AccountId), String> {
 	let hex_encoded_params = params.parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
 
 	if hex_encoded_params.len() < 4 {
@@ -376,21 +376,16 @@ fn personhoodoracle_parse_params(
 	let account: AccountId =
 		Decode::decode(&mut account.as_slice()).map_err(|e| format!("{:?}", e))?;
 
-	let number_of_reputations =
-		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
-	let number_of_reputations: CeremonyIndexType =
-		Decode::decode(&mut number_of_reputations.as_slice()).map_err(|e| format!("{:?}", e))?;
-
-	Ok((cid, cindex, account, number_of_reputations))
+	Ok((cid, cindex, account))
 }
 // FIXME: have the user submit a `ProofOfAttendance`
 fn fetch_reputation_inner(params: Params) -> Result<Vec<Reputation>, String> {
-	let (cid, cindex, account, number_of_reputations) = personhoodoracle_parse_params(params)?;
-	trace!("reputation for account {:?} is {}", account, number_of_reputations);
-	Ok(fetch_reputation(cid, cindex, account, number_of_reputations))
+	let (cid, cindex, account) = personhoodoracle_parse_params(params)?;
+	trace!("reputation for account {:?} for community {} at cycle {}", account, cid, cindex);
+	Ok(fetch_reputation(cid, cindex, account))
 }
 
-fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
+fn issue_nostr_badge_inner(params: Params) -> Result<nostr::EventId, String> {
 	trace!("evaluating reputation to maybe issue a nostr badge");
 	// Check reputation first - will be change later to have the user submit their `ProofOfAttendance`
 
@@ -404,49 +399,51 @@ fn issue_nostr_badge_inner(params: Params) -> Result<(), String> {
 	let hex_encoded_params =
 		params.clone().parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
 
-	if hex_encoded_params.len() < 6 {
+	if hex_encoded_params.len() < 5 {
 		return Err(format!(
 			"Wrong number of arguments for Nostr badge request: {}, expected: {}",
 			hex_encoded_params.len(),
 			6
 		))
 	}
-	let (cid, cindex, account, _number_of_reputations) = personhoodoracle_parse_params(params)?;
+	let (cid, cindex, account) = personhoodoracle_parse_params(params)?;
 
 	let nostr_pub_key =
-		itp_utils::hex::decode_hex(&hex_encoded_params[4]).map_err(|e| format!("{:?}", e))?;
-	let nostr_pub_key: String =
+		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
+	let nostr_pub_key_str: String =
 		Decode::decode(&mut nostr_pub_key.as_slice()).map_err(|e| format!("{:?}", e))?;
 	let nostr_pub_key =
-		XOnlyPublicKey::from_bech32(&nostr_pub_key).map_err(|e| format!("{:?}", e))?;
+		XOnlyPublicKey::from_bech32(&nostr_pub_key_str).map_err(|e| format!("{:?}", e))?;
 
 	let nostr_relay_url =
-		itp_utils::hex::decode_hex(&hex_encoded_params[5]).map_err(|e| format!("{:?}", e))?;
+		itp_utils::hex::decode_hex(&hex_encoded_params[4]).map_err(|e| format!("{:?}", e))?;
 	let nostr_relay_url: String =
 		Decode::decode(&mut nostr_relay_url.as_slice()).map_err(|e| format!("{:?}", e))?;
 
-	let nostr_issuers_private_key =
-		itp_utils::hex::decode_hex(&hex_encoded_params[6]).map_err(|e| format!("{:?}", e))?;
-	let nostr_issuers_private_key: String =
-		Decode::decode(&mut nostr_issuers_private_key.as_slice())
-			.map_err(|e| format!("{:?}", e))?;
+	// todo: derive from enclave signing key
+	let nostr_issuers_private_key = "nsec1punh8ys9ewzjhuuzh6dtna2d72l8d2pc2cyuuh93g9h73uedg5nq9z4p7l".to_string();
+
 	let secp = Secp256k1::new();
 	let signer_key =
 		Keys::from_sk_str(&nostr_issuers_private_key, &secp).map_err(|e| format!("{:?}", e))?;
 
-	let badge_def = create_nostr_badge_definition(&signer_key);
-	trace!("nostr badge definition {:?}", badge_def);
+	let badge_def = create_nostr_badge_definition(&signer_key, verified_reputations as u32);
+	println!("prepared nostr badge definition");
+	debug!("  {:?}", badge_def);
+	// todo: set NIP-40 expiry timestamp
 	let award = create_nostr_badge_award(badge_def.clone(), nostr_pub_key, &signer_key);
-	trace!("nostr badge award {:?}", award);
+	println!("prepared nostr badge award for {}", nostr_pub_key_str);
+	debug!("  {:?}", award);
 	let badge_def = badge_def.into_event();
 	let award = award.into_event();
-	trace!("sending to nostr relay at {}", nostr_relay_url);
-	send_nostr_events(vec![badge_def, award], &nostr_relay_url)
+	println!("sending to nostr relay at {}", nostr_relay_url);
+	let nostr_events = vec![badge_def, award.clone()];
+	send_nostr_events(nostr_events, &nostr_relay_url)
 		.map_err(|e| format!("Failed to send nostr events: {:?}", e))?;
 
 	let _temp_tuple = (cid, cindex, account);
 
-	Ok(())
+	Ok(award.id)
 }
 
 fn create_nostr_badge_award(
@@ -463,24 +460,41 @@ fn create_nostr_badge_award(
 	nip58::BadgeAward::new(&badge_definition_event, awarded_keys, signer_key, ts, &secp).unwrap()
 }
 
-fn create_nostr_badge_definition(signer_key: &Keys) -> BadgeDefinition {
+fn create_nostr_badge_definition(signer_key: &Keys, reputation: u32) -> BadgeDefinition {
 	// Just for demo purposes, should be reworked
-	let builder = nip58::BadgeDefinitionBuilder::new("likely_person".to_owned());
-	let thumb_size = ImageDimensions(181, 151);
-	let thumbs = vec![
-		(
-			"https://parachains.info/images/parachains/1625163231_encointer_logo.png".to_owned(),
-			Some(thumb_size),
-		),
-		(
-			"https://parachains.info/images/parachains/1625163231_encointer_logo.png".to_owned(),
-			None,
-		),
-	];
+	let builder = nip58::BadgeDefinitionBuilder::new(format!("personhood_{}", reputation).to_owned());
 	let builder = builder
-		.image("https://parachains.info/images/parachains/1625163231_encointer_logo.png".to_owned())
-		.thumbs(thumbs)
-		.image_dimensions(ImageDimensions(181, 151));
+		.name(format!("Personhood Confidence {}/5 Verified by Encointer (TESTING)", reputation))
+		.description(format!("This badge is only issued once every 10 days for reputables on the Encointer network who have attended proof of personhood cycles (see https://encointer.org). \
+			Each person owning an account bearing this badge has verifiably attended (in person) {} of the last 5 cycles. \
+			There can always ever be maximally as many 5-of-5 badges issued as there are human participants in encointer communities.\
+			For enhanced privacy, this badge is unlinkable to the account used on Encointer Network (Unlinked by Integritee's trusted execution environment oracle SDK: https://integritee.network).\
+			THE ISSUER OF THIS BADGE IS STILL RUNNING IN TEE TESTING MODE. DO NOT TRUST THIS BADGE JUST YET", reputation))
+		.image("https://cdn.nostr.build/i/d3c748f12e4a6ab6cead52b2b33bca620f3f2d4db624b420320febb2d780b3a5.png".to_owned())
+		.image_dimensions(ImageDimensions(1024, 1024))
+		.thumbs(vec![
+			(
+				"https://cdn.nostr.build/i/0baa3b8912935b845aec33a63c95d36181ff6f53784d3a990043d09409434569.png".to_owned(),
+				Some(ImageDimensions(512, 512)),
+			),
+			(
+				"https://cdn.nostr.build/i/32e3bc7f088a6a8a96d79b12049330d4604e1feced3925952ad361cd56a9bb98.png".to_owned(),
+				Some(ImageDimensions(256, 256)),
+			),
+			(
+				"https://cdn.nostr.build/i/42eb5b8ddc64ea6467ecc7fcf0d8eeebbb4c83705192c413cff8cc8c9bcdff92.png".to_owned(),
+				Some(ImageDimensions(128, 128)),
+			),
+			(
+				"https://cdn.nostr.build/i/039765c1b4fe8ff0c3c96acc40641eeded2668971209f447ffff13968a7282f3.png".to_owned(),
+				Some(ImageDimensions(64, 64)),
+			),
+			(
+				"https://cdn.nostr.build/i/cb0b56c0fbaea355f6d85f7573e366272555d6c2a8a81180e0338e86977fdbd2.png".to_owned(),
+				Some(ImageDimensions(32, 32)),
+			),
+		]);
+
 
 	let secp = Secp256k1::new();
 	let ts = get_ts();

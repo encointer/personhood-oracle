@@ -16,7 +16,6 @@
 */
 use crate::{String, Vec};
 use itp_time_utils::{duration_now, now_as_secs, Duration};
-use log::info;
 use nostr::{prelude::*, types::time::TimeProvider, Event, Timestamp};
 use tungstenite_sgx as tungstenite;
 
@@ -86,7 +85,7 @@ pub fn send_nostr_events(events_to_send: Vec<Event>, relay: &str) -> Result<(), 
 		.map_err(|e| format!("Can't connect to relay: error={:?}", e))?;
 
 	for event in events_to_send {
-		info!("sending nostr message with id {}", event.id.to_bech32().unwrap());
+		println!("sending nostr message with id {}", event.id.to_bech32().unwrap());
 
 		let msg = ClientMessage::new_event(event).as_json();
 		socket
