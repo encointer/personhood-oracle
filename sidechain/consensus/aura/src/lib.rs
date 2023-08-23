@@ -309,13 +309,8 @@ mod tests {
 		vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()]
 	}
 
-<<<<<<< HEAD
-	fn create_validateer_set_from_publics(authorities: Vec<Public>) -> Vec<Enclave> {
-		authorities.iter().map(|a| validateer((*a).into())).collect()
-=======
 	fn create_validateer_set_from_publics(authorities: Vec<Public>) -> Vec<AccountId> {
 		authorities.iter().map(|a| AccountId::from(a.clone())).collect()
->>>>>>> upstream/master
 	}
 
 	fn onchain_mock(

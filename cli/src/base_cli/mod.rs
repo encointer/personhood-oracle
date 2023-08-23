@@ -32,7 +32,6 @@ use sp_core::crypto::Ss58Codec;
 use sp_keystore::Keystore;
 use std::{
 	path::PathBuf,
-	time::{Duration, UNIX_EPOCH},
 };
 use substrate_api_client::Metadata;
 use substrate_client_keystore::LocalKeystore;

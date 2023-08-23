@@ -628,25 +628,17 @@ fn print_events(events: Vec<Event>) {
 			RuntimeEvent::Teerex(re) => {
 				debug!("{:?}", re);
 				match &re {
-<<<<<<< HEAD
-					my_node_runtime::pallet_teerex::Event::AddedEnclave {
-=======
 					my_node_runtime::pallet_teerex::Event::AddedSgxEnclave {
->>>>>>> upstream/master
 						registered_by,
 						worker_url,
 						..
 					} => {
 						println!("[+] Received AddedEnclave event");
 						println!("    Sender (Worker):  {:?}", registered_by);
-<<<<<<< HEAD
-						println!("    Registered URL: {:?}", str::from_utf8(worker_url).unwrap());
-=======
 						println!(
 							"    Registered URL: {:?}",
 							str::from_utf8(&worker_url.clone().unwrap_or("none".into())).unwrap()
 						);
->>>>>>> upstream/master
 					},
 					_ => {
 						trace!("Ignoring unsupported pallet_teerex event");
@@ -701,51 +693,6 @@ fn print_events(events: Vec<Event>) {
 					},
 				}
 			},
-<<<<<<< HEAD
-=======
-			#[cfg(feature = "teeracle")]
-			RuntimeEvent::Teeracle(re) => {
-				debug!("{:?}", re);
-				match &re {
-					my_node_runtime::pallet_teeracle::Event::ExchangeRateUpdated {
-						data_source,
-						trading_pair,
-						exchange_rate,
-					} => {
-						println!("[+] Received ExchangeRateUpdated event");
-						println!("    Data source:  {}", data_source);
-						println!("    trading pair:  {}", trading_pair);
-						println!("    Exchange rate: {:?}", exchange_rate);
-					},
-					my_node_runtime::pallet_teeracle::Event::ExchangeRateDeleted {
-						data_source,
-						trading_pair,
-					} => {
-						println!("[+] Received ExchangeRateDeleted event");
-						println!("    Data source:  {}", data_source);
-						println!("    trading pair:  {}", trading_pair);
-					},
-					my_node_runtime::pallet_teeracle::Event::AddedToWhitelist {
-						data_source,
-						enclave_fingerprint,
-					} => {
-						println!("[+] Received AddedToWhitelist event");
-						println!("    Data source:  {}", data_source);
-						println!("    fingerprint:  {:?}", enclave_fingerprint);
-					},
-					my_node_runtime::pallet_teeracle::Event::RemovedFromWhitelist {
-						data_source,
-						enclave_fingerprint,
-					} => {
-						println!("[+] Received RemovedFromWhitelist event");
-						println!("    Data source:  {}", data_source);
-						println!("    fingerprint:  {:?}", enclave_fingerprint);
-					},
-					_ => {
-						trace!("Ignoring unsupported pallet_teeracle event");
-					},
-				}
-			},
 			#[cfg(feature = "sidechain")]
 			RuntimeEvent::Sidechain(re) => match &re {
 				my_node_runtime::pallet_sidechain::Event::FinalizedSidechainBlock {
@@ -762,7 +709,6 @@ fn print_events(events: Vec<Event>) {
 					trace!("Ignoring unsupported pallet_sidechain event");
 				},
 			},
->>>>>>> upstream/master
 			_ => {
 				trace!("Ignoring event {:?}", evr);
 			},

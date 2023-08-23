@@ -60,7 +60,7 @@ its-storage = { path = "../sidechain/storage" }
 
 # scs / integritee
 
-my-node-runtime = { package = "encointer-node-notee-runtime", git = "https://github.com/encointer/encointer-node.git", branch = "szp/community-sidechain-update" }
+my-node-runtime = { package = "encointer-node-notee-runtime", git = "https://github.com/encointer/encointer-node.git", branch = "community-sidechain" }
 encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", default-features = false, optional = true, features = ["full_crypto"] }
 sgx-verify = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
 # `default-features = false` to remove the jsonrpsee dependency.

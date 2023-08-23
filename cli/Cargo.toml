@@ -24,7 +24,7 @@ sgx_crypto_helper = { branch = "master", git = "https://github.com/apache/teacla
 thiserror = "1.0"
 ws = { version = "0.9.1", features = ["ssl"] }
 
-my-node-runtime = { package = "encointer-node-notee-runtime", git = "https://github.com/encointer/encointer-node.git", branch = "szp/community-sidechain-update" }
+my-node-runtime = { package = "encointer-node-notee-runtime", git = "https://github.com/encointer/encointer-node.git", branch = "community-sidechain" }
 encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", features = ["full_crypto"] }
 # TODO switch to upstream once `no_std` compatible, see issue #25
 nostr = { default-features = false, features = ["alloc", "nip19"], git = "https://github.com/OverOrion/nostr", branch = "no_std_upstream_working" }
