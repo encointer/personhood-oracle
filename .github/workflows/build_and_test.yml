@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - master
       - 'sdk-v[0-9]+.[0-9]+.[0-9]+-*'
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   pull_request:
     branches:
-      - main
+      - master
       - 'sdk-v[0-9]+.[0-9]+.[0-9]+-*'
 
 env:
