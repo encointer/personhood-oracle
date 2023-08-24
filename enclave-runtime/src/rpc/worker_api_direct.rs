@@ -472,28 +472,20 @@ fn create_nostr_badge_definition(signer_key: &Keys, reputation: u32) -> BadgeDef
 			There can always ever be maximally as many 5-of-5 badges issued as there are human participants in encointer communities.\
 			For enhanced privacy, this badge is unlinkable to the account used on Encointer Network (Unlinked by Integritee's trusted execution environment oracle SDK: https://integritee.network).\
 			THE ISSUER OF THIS BADGE IS STILL RUNNING IN TEE TESTING MODE. DO NOT TRUST THIS BADGE JUST YET", reputation))
-		.image("https://cdn.nostr.build/i/d3c748f12e4a6ab6cead52b2b33bca620f3f2d4db624b420320febb2d780b3a5.png".to_owned())
+		.image("https://cdn.nostr.build/i/1e779aabd6fe190ca26f5211bab84a8f3642ed1d74f7cda70b73d96779b80f34.png".to_owned())
 		.image_dimensions(ImageDimensions(1024, 1024))
 		.thumbs(vec![
 			(
-				"https://cdn.nostr.build/i/0baa3b8912935b845aec33a63c95d36181ff6f53784d3a990043d09409434569.png".to_owned(),
+				"https://cdn.nostr.build/i/aaf7ee0c2ae330fdb6dc48b6373ca19bb61b0bf11abc154358ecd679d17a5d1d.png".to_owned(),
 				Some(ImageDimensions(512, 512)),
 			),
 			(
-				"https://cdn.nostr.build/i/32e3bc7f088a6a8a96d79b12049330d4604e1feced3925952ad361cd56a9bb98.png".to_owned(),
+				"https://cdn.nostr.build/i/31b726aab0bd615e46c2f1b682208ab262a77e6618637b25872499d370c2c91f.png".to_owned(),
 				Some(ImageDimensions(256, 256)),
 			),
 			(
-				"https://cdn.nostr.build/i/42eb5b8ddc64ea6467ecc7fcf0d8eeebbb4c83705192c413cff8cc8c9bcdff92.png".to_owned(),
-				Some(ImageDimensions(128, 128)),
-			),
-			(
-				"https://cdn.nostr.build/i/039765c1b4fe8ff0c3c96acc40641eeded2668971209f447ffff13968a7282f3.png".to_owned(),
+				"https://cdn.nostr.build/i/da811af1838f530f0dfdcc2a419e207f36b6a0a4ee935631c43900add354026d.png".to_owned(),
 				Some(ImageDimensions(64, 64)),
-			),
-			(
-				"https://cdn.nostr.build/i/cb0b56c0fbaea355f6d85f7573e366272555d6c2a8a81180e0338e86977fdbd2.png".to_owned(),
-				Some(ImageDimensions(32, 32)),
 			),
 		]);
 
