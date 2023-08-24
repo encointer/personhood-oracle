@@ -52,7 +52,12 @@ fn get_reputation_ocall_api(
 	cid: CommunityIdentifier,
 	cindex: CeremonyIndexType,
 ) -> Reputation {
-	println!("requesting reputation for {:?}: cid is :{}, cindex is: {}", prover, cid, cindex.clone());
+	println!(
+		"requesting reputation for {:?}: cid is :{}, cindex is: {}",
+		prover,
+		cid,
+		cindex.clone()
+	);
 	let unverified_reputation = Reputation::Unverified;
 
 	let ocall_api = GLOBAL_OCALL_API_COMPONENT.get();

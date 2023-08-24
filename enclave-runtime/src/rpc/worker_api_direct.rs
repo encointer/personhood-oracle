@@ -421,7 +421,8 @@ fn issue_nostr_badge_inner(params: Params) -> Result<nostr::EventId, String> {
 		Decode::decode(&mut nostr_relay_url.as_slice()).map_err(|e| format!("{:?}", e))?;
 
 	// todo: derive from enclave signing key
-	let nostr_issuers_private_key = "nsec1punh8ys9ewzjhuuzh6dtna2d72l8d2pc2cyuuh93g9h73uedg5nq9z4p7l".to_string();
+	let nostr_issuers_private_key =
+		"nsec1punh8ys9ewzjhuuzh6dtna2d72l8d2pc2cyuuh93g9h73uedg5nq9z4p7l".to_string();
 
 	let secp = Secp256k1::new();
 	let signer_key =
@@ -462,7 +463,8 @@ fn create_nostr_badge_award(
 
 fn create_nostr_badge_definition(signer_key: &Keys, reputation: u32) -> BadgeDefinition {
 	// Just for demo purposes, should be reworked
-	let builder = nip58::BadgeDefinitionBuilder::new(format!("personhood_{}", reputation).to_owned());
+	let builder =
+		nip58::BadgeDefinitionBuilder::new(format!("personhood_{}", reputation).to_owned());
 	let builder = builder
 		.name(format!("Personhood Confidence {}/5 Verified by Encointer (TESTING)", reputation))
 		.description(format!("This badge is only issued once every 10 days for reputables on the Encointer network who have attended proof of personhood cycles (see https://encointer.org). \
@@ -494,7 +496,6 @@ fn create_nostr_badge_definition(signer_key: &Keys, reputation: u32) -> BadgeDef
 				Some(ImageDimensions(32, 32)),
 			),
 		]);
-
 
 	let secp = Secp256k1::new();
 	let ts = get_ts();
