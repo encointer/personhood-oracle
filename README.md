@@ -1,42 +1,85 @@
-# integritee-worker
+# Privacy-Preserving Personhood Oracle
 
-Integritee worker for Integritee [node](https://github.com/integritee-network/integritee-node) or [parachain](https://github.com/integritee-network/parachain)
+## Run Locally in SW Mode in Docker
 
-This is part of [Integritee](https://integritee.network)
-
-## Build and Run
-Please see our [Integritee Book](https://docs.integritee.network/4-development/4.4-sdk) to learn how to build and run this.
-
-To start multiple worker and a node with one simple command: Check out [this README](local-setup/README.md).
-
-## Docker
-See [docker/README.md](docker/README.md).
-
-## Tests
-
-There are 3 types of tests:
-- cargo tests
-- enclave tests
-- integration tests
-
-### Cargo Tests
-Run
+clone the repos needed into the same top folder:
 ```
-cargo test
+git clone https://github.com/encointer/personhood-oracle.git
+git clone https://github.com/encointer/encointer-node.git
 ```
 
-### Enclave Tests
-Run
+build Encointer node including Integritee pallets
 
 ```
-make
-./bin/integritee-service test --all
+cd encointer node
+git checkout community-sidechain
+cargo build --release
 ```
 
-### Integration Tests
-See [docker/README.md](docker/README.md)
+setup development environment in docker:
 
-## Direct calls scalability
+```
+cd personhood-oracle
+docker run --name integritee-dev-personhood-and-node -it -p 9944:9944 -v $(pwd):/home/ubuntu/personhood-oracle -v $(pwd)/../encointer-node:/home/ubuntu/encointer-node -e MYUID=$(id -u) -e MYGUID=$(id -g) integritee/integritee-dev:0.2.1 /bin/bash
+```
 
-For direct calls, a worker runs a web-socket server inside the enclave. An important factor for scalability is the transaction throughput of a single worker instance, which is in part defined by the maximum number of concurrent socket connections possible. On Linux by default, a process can have a maximum of `1024` concurrent file descriptors (show by `ulimit -n`).
-If the web-socket server hits that limit, incoming connections will be declined until one of the established connections is closed. Permanently changing the `ulimit -n` value can be done in the `/etc/security/limits.conf` configuration file. See [this](https://linuxhint.com/permanently_set_ulimit_value/) guide for more information.
+build personhood oracle (inside docker)
+```
+cd personhood-oracle
+SGX_MODE=SW WORKER_FEATURES= WORKER_MODE=teeracle make
+```
+
+### Run the Demo
+
+(re)enter the docker container created above
+```
+docker start -a -i integritee-dev-personhood-and-node
+```
+use tmux to split into 3 panes
+
+run blockchain node
+```
+cd ~/encointer-node
+./target/release/encointer-node-notee --dev --enable-offchain-indexing true --ws-external --rpc-cors all
+```
+the port 9944 will be mapped to the host, so you can observe what's happening
+
+run community simulation (on host)
+```
+encointer-node/client/bootstrap_demo_community.py 
+```
+wait a few minutes until bootstrapping has completed
+
+run oracle (inside docker)
+```
+cd ~/personhood-oracle/bin
+export RUST_LOG=info,substrate_api_client=warn,ws=warn,mio=warn,its_consensus_common=info,sidechain=info,integritee_service=trace,enclave_runtime=trace,ac_node_api=warn,sp_io=warn,itc_parentchain_indirect_calls_executor=trace,itp_stf_executor=trace,itc_parentchain_light_client=trace,itc_parentchain_block_importer=trace,itp_stf_state_handler=trace,itc_direct_rpc_server=trace
+./integritee-service -c run --skip-ra --dev
+```
+in the best case, wait a few minutes until you see a teerex.registerSgxEnclave Event on the blockchain. Not strictly necessary
+
+claim nostr badge: 
+
+create demo account for Alice:
+
+https://iris.to/settings
+
+we created this one: `npub1xq33nsus0d2d00jzdea4unl08p35cd05md7mmgtxky5sncsjgxvqw2p77y`
+
+```
+cd ~/personhood-oracle/bin
+./integritee-cli personhood-oracle issue-nostr-badge //Alice npub1xq33nsus0d2d00jzdea4unl08p35cd05md7mmgtxky5sncsjgxvqw2p77y sqm1v79dF6b wss://relay.damus.io
+```
+you should see
+
+```
+Nostr badge has been issued successfully.
+badge award note id: note1nzlnzyjuuljltrr4dqkdfaqtnjq6jyzvpev5wugvtltfwud6zulq0r0cg2
+```
+you can now check the badge by visiting
+https://snort.social/p/npub1xq33nsus0d2d00jzdea4unl08p35cd05md7mmgtxky5sncsjgxvqw2p77y
+
+you may need to make sure to subscribe to relay.damus.io in settings
+
+find the badge definition published here:
+https://badges.page/b/naddr1qqx8qetjwdhku6r0daj97vgzypz2eydm7k6h8cs4wf9n5ylwux8vatzc9sdhjqnw02nnnx7kkuvluqcyqqq82wgtjchvs
