@@ -92,6 +92,7 @@ pub fn setup_account_funding(
 
 // Alice plays the faucet and sends some funds to the account if balance is low
 fn ensure_account_has_funds(api: &ParentchainApi, accountid: &AccountId32) -> Result<(), Error> {
+	info!("Ensuring funds for Account: {} on chain with genesis hash {}", accountid, api.genesis_hash());
 	// check account balance
 	let free_balance = api.get_free_balance(accountid)?;
 	info!("TEE's free balance = {:?} (Account: {})", free_balance, accountid);

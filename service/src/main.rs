@@ -846,8 +846,7 @@ fn send_extrinsic(
 		// Return without registering the enclave. This will fail and the transaction will be banned for 30min.
 		return None
 	}
-
-	info!("[>] send extrinsic");
+	info!("[>] send extrinsic to chain with genesis hash {}", api.genesis_hash());
 	trace!("  encoded extrinsic: 0x{:}", hex::encode(extrinsic.clone()));
 
 	// fixme: wait ...until_success doesn't work due to https://github.com/scs/substrate-api-client/issues/624
