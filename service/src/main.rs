@@ -19,7 +19,7 @@
 #![allow(clippy::redundant_closure_call)] // See issue #27
 
 #[cfg(feature = "teeracle")]
-use crate::teeracle::schedule_periodic_reregistration_thread;
+use crate::teeracle::{schedule_periodic_reregistration_thread};
 
 #[cfg(not(feature = "dcap"))]
 use crate::utils::check_files;
@@ -72,6 +72,7 @@ use its_storage::{interface::FetchBlocks, BlockPruner, SidechainStorageLock};
 use log::*;
 use my_node_runtime::{Hash, Header, RuntimeEvent};
 use sgx_types::*;
+use sp_runtime::traits::Header as HeaderT;
 use substrate_api_client::{
 	api::XtStatus, rpc::HandleSubscription, GetHeader, SubmitAndWatch, SubscribeChain,
 	SubscribeEvents,
@@ -82,6 +83,7 @@ use teerex_primitives::AnySigner;
 use sgx_verify::extract_tcb_info_from_raw_dcap_quote;
 
 use enclave_bridge_primitives::ShardIdentifier;
+use itc_parentchain::primitives::ParentchainId;
 use sp_core::crypto::{AccountId32, Ss58Codec};
 use sp_keyring::AccountKeyring;
 use sp_runtime::MultiSigner;
@@ -146,8 +148,10 @@ fn main() {
 		)
 		.unwrap(),
 	);
-	let node_api_factory =
-		Arc::new(NodeApiFactory::new(config.node_url(), AccountKeyring::Alice.pair()));
+	let node_api_factory = Arc::new(NodeApiFactory::new(
+		config.integritee_rpc_endpoint(),
+		AccountKeyring::Alice.pair(),
+	));
 	let enclave = Arc::new(enclave_init(&config).unwrap());
 	let initialization_handler = Arc::new(InitializationHandler::default());
 	let worker = Arc::new(EnclaveWorker::new(
@@ -165,9 +169,14 @@ fn main() {
 		Arc::new(BlockFetcher::<SignedSidechainBlock, _>::new(untrusted_peer_fetcher));
 	let enclave_metrics_receiver = Arc::new(EnclaveMetricsReceiver {});
 
+	let maybe_target_a_parentchain_api_factory = config
+		.target_a_parentchain_rpc_endpoint()
+		.map(|url| Arc::new(NodeApiFactory::new(url, AccountKeyring::Alice.pair())));
+
 	// initialize o-call bridge with a concrete factory implementation
 	OCallBridge::initialize(Arc::new(OCallBridgeComponentFactory::new(
 		node_api_factory.clone(),
+		maybe_target_a_parentchain_api_factory,
 		sync_block_broadcaster,
 		enclave.clone(),
 		sidechain_blockstorage.clone(),
@@ -296,7 +305,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	shard: &ShardIdentifier,
 	enclave: Arc<E>,
 	sidechain_storage: Arc<D>,
-	node_api: ParentchainApi,
+	integritee_rpc_api: ParentchainApi,
 	tokio_handle_getter: Arc<T>,
 	initialization_handler: Arc<InitializationHandler>,
 	quoting_enclave_target_info: Option<sgx_target_info_t>,
@@ -317,7 +326,30 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	let run_config = config.run_config().clone().expect("Run config missing");
 	let skip_ra = run_config.skip_ra();
 
-	println!("Integritee Worker v{}", VERSION);
+	#[cfg(feature = "teeracle")]
+	let flavor_str = "teeracle";
+	#[cfg(feature = "sidechain")]
+	let flavor_str = "sidechain";
+	#[cfg(feature = "offchain-worker")]
+	let flavor_str = "offchain-worker";
+	#[cfg(not(any(feature = "offchain-worker", feature = "sidechain", feature = "teeracle")))]
+	let flavor_str = "offchain-worker";
+
+	println!("Integritee Worker for {} v{}", flavor_str, VERSION);
+
+	#[cfg(feature = "dcap")]
+	println!("  DCAP is enabled");
+	#[cfg(not(feature = "dcap"))]
+	println!("  DCAP is disabled");
+	#[cfg(feature = "production")]
+	println!("  Production Mode is enabled");
+	#[cfg(not(feature = "production"))]
+	println!("  Production Mode is disabled");
+	#[cfg(feature = "evm")]
+	println!("  EVM is enabled");
+	#[cfg(not(feature = "evm"))]
+	println!("  EVM is disabled");
+
 	info!("starting worker on shard {}", shard.encode().to_base58());
 	// ------------------------------------------------------------------------
 	// check for required files
@@ -377,8 +409,10 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	// ------------------------------------------------------------------------
 	// Start prometheus metrics server.
 	if config.enable_metrics_server() {
-		let enclave_wallet =
-			Arc::new(EnclaveAccountInfoProvider::new(node_api.clone(), tee_accountid.clone()));
+		let enclave_wallet = Arc::new(EnclaveAccountInfoProvider::new(
+			integritee_rpc_api.clone(),
+			tee_accountid.clone(),
+		));
 		let metrics_handler = Arc::new(MetricsHandler::new(enclave_wallet));
 		let metrics_server_port = config
 			.try_parse_metrics_server_port()
@@ -424,39 +458,24 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 
 	// ------------------------------------------------------------------------
 	// Init parentchain specific stuff. Needed for parentchain communication.
-	let parentchain_handler = Arc::new(
-		ParentchainHandler::new_with_automatic_light_client_allocation(
-			node_api.clone(),
-			enclave.clone(),
-		)
-		.unwrap(),
-	);
-	let last_synced_header = parentchain_handler.init_parentchain_components().unwrap();
-	trace!("last synched parentchain block: {}", last_synced_header.number);
 
-	let nonce = node_api.get_nonce_of(&tee_accountid).unwrap();
-	info!("Enclave nonce = {:?}", nonce);
-	enclave
-		.set_nonce(nonce)
-		.expect("Could not set nonce of enclave. Returning here...");
-
-	let metadata = node_api.metadata().clone();
-	let runtime_spec_version = node_api.runtime_version().spec_version;
-	let runtime_transaction_version = node_api.runtime_version().transaction_version;
-	enclave
-		.set_node_metadata(
-			NodeMetadata::new(metadata, runtime_spec_version, runtime_transaction_version).encode(),
-		)
-		.expect("Could not set the node metadata in the enclave");
+	let (parentchain_handler, last_synced_header) =
+		init_parentchain(&enclave, &integritee_rpc_api, &tee_accountid, ParentchainId::Integritee);
 
 	#[cfg(feature = "dcap")]
-	register_collateral(&node_api, &*enclave, &tee_accountid, is_development_mode, skip_ra);
+	register_collateral(
+		&integritee_rpc_api,
+		&*enclave,
+		&tee_accountid,
+		is_development_mode,
+		skip_ra,
+	);
 
 	let trusted_url = config.trusted_worker_url_external();
 
 	#[cfg(feature = "attesteer")]
 	fetch_marblerun_events_every_hour(
-		node_api.clone(),
+		integritee_rpc_api.clone(),
 		enclave.clone(),
 		tee_accountid.clone(),
 		is_development_mode,
@@ -475,16 +494,17 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 		println!("[!] creating remote attestation report and create enclave register extrinsic.");
 	};
 
-	// clones because of the move
-	let enclave2 = enclave.clone();
-	let node_api2 = node_api.clone();
 	#[cfg(feature = "dcap")]
-	enclave2.set_sgx_qpl_logging().expect("QPL logging setup failed");
+	enclave.set_sgx_qpl_logging().expect("QPL logging setup failed");
+
+	let enclave2 = enclave.clone();
 	#[cfg(not(feature = "dcap"))]
 	let register_xt = move || enclave2.generate_ias_ra_extrinsic(&trusted_url, skip_ra).unwrap();
 	#[cfg(feature = "dcap")]
 	let register_xt = move || enclave2.generate_dcap_ra_extrinsic(&trusted_url, skip_ra).unwrap();
 
+	// clones because of the move
+	let node_api2 = integritee_rpc_api.clone();
 	let tee_accountid_clone = tee_accountid.clone();
 	let send_register_xt = move || {
 		println!("[+] Send register enclave extrinsic");
@@ -493,11 +513,19 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 
 	let register_enclave_block_hash = send_register_xt().unwrap();
 
-	let register_enclave_xt_header =
-		node_api.get_header(Some(register_enclave_block_hash)).unwrap().unwrap();
+	let register_enclave_xt_header = integritee_rpc_api
+		.get_header(Some(register_enclave_block_hash))
+		.unwrap()
+		.unwrap();
+
+	println!(
+		"[+] Enclave registered at block number: {:?}, hash: {:?}",
+		register_enclave_xt_header.number(),
+		register_enclave_xt_header.hash()
+	);
 
 	let we_are_primary_validateer =
-		we_are_primary_worker(&node_api, shard, &tee_accountid).unwrap();
+		we_are_primary_worker(&integritee_rpc_api, shard, &tee_accountid).unwrap();
 
 	if we_are_primary_validateer {
 		println!("[+] We are the primary worker");
@@ -518,7 +546,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	}
 
 	if WorkerModeProvider::worker_mode() != WorkerMode::Teeracle {
-		println!("*** [+] Finished syncing light client, syncing parentchain...");
+		println!("*** [+] Finished initializing light client, syncing parentchain...");
 
 		// Syncing all parentchain blocks, this might take a while..
 		let mut last_synced_header =
@@ -528,7 +556,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 		// Initialize the sidechain
 		if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain {
 			last_synced_header = sidechain_init_block_production(
-				enclave,
+				enclave.clone(),
 				&register_enclave_xt_header,
 				we_are_primary_validateer,
 				parentchain_handler.clone(),
@@ -555,19 +583,113 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 
 	// ------------------------------------------------------------------------
 	if WorkerModeProvider::worker_mode() == WorkerMode::Sidechain {
-		spawn_worker_for_shard_polling(shard, node_api.clone(), initialization_handler);
+		spawn_worker_for_shard_polling(shard, integritee_rpc_api.clone(), initialization_handler);
+	}
+
+	if let Some(url) = config.target_a_parentchain_rpc_endpoint() {
+		init_target_a_parentchain(&enclave, &tee_accountid, url, is_development_mode)
 	}
 
 	// ------------------------------------------------------------------------
 	// Subscribe to events and print them.
 	println!("*** Subscribing to events");
-	let mut subscription = node_api.subscribe_events().unwrap();
+	let mut subscription = integritee_rpc_api.subscribe_events().unwrap();
 	println!("[+] Subscribed to events. waiting...");
 	loop {
 		if let Some(Ok(events)) = subscription.next_event::<RuntimeEvent, Hash>() {
 			print_events(events)
 		}
 	}
+}
+
+fn init_target_a_parentchain<E>(
+	enclave: &Arc<E>,
+	tee_account_id: &AccountId32,
+	url: String,
+	is_development_mode: bool,
+) where
+	E: EnclaveBase + Sidechain,
+{
+	let node_api = NodeApiFactory::new(url, AccountKeyring::Alice.pair())
+		.create_api()
+		.expect("Failed to create Target A parentchain node API");
+
+	// some random bytes not too small to ensure that the enclave has enough funds
+	setup_account_funding(&node_api, tee_account_id, [0u8; 100].into(), is_development_mode)
+		.expect("Could not fund Target A parentchain enclave account");
+
+	let (parentchain_handler, last_synched_header) =
+		init_parentchain(enclave, &node_api, tee_account_id, ParentchainId::TargetA);
+
+	if WorkerModeProvider::worker_mode() != WorkerMode::Teeracle {
+		println!("*** [+] Finished initializing Target A parentchain light client, syncing parentchain...");
+
+		// Syncing all parentchain blocks, this might take a while..
+		let last_synched_header =
+			parentchain_handler.sync_parentchain(last_synched_header).unwrap();
+
+		// start parentchain syncing loop (subscribe to header updates)
+		thread::Builder::new()
+			.name("target_a_parentchain_sync_loop".to_owned())
+			.spawn(move || {
+				if let Err(e) =
+					subscribe_to_parentchain_new_headers(parentchain_handler, last_synched_header)
+				{
+					error!("Target A parentchain block syncing terminated with a failure: {:?}", e);
+				}
+				println!("[!] Target A parentchain block syncing has terminated");
+			})
+			.unwrap();
+	}
+
+	// Subscribe to events and print them.
+	println!("*** Subscribing to events of Target A chain");
+	let mut subscription = node_api.subscribe_events().unwrap();
+	println!("[+] Subscribed to events. waiting...");
+
+    loop {
+        if let Some(Ok(events)) = subscription.next_event::<RuntimeEvent, Hash>() {
+            print_events(events)
+        }
+    }
+}
+
+fn init_parentchain<E>(
+	enclave: &Arc<E>,
+	node_api: &ParentchainApi,
+	tee_account_id: &AccountId32,
+	parentchain_id: ParentchainId,
+) -> (Arc<ParentchainHandler<ParentchainApi, E>>, Header)
+where
+	E: EnclaveBase + Sidechain,
+{
+	let parentchain_handler = Arc::new(
+		ParentchainHandler::new_with_automatic_light_client_allocation(
+			node_api.clone(),
+			enclave.clone(),
+			parentchain_id,
+		)
+		.unwrap(),
+	);
+	let last_synced_header = parentchain_handler.init_parentchain_components().unwrap();
+	trace!("last synched parentchain block: {}", last_synced_header.number);
+
+	let nonce = node_api.get_nonce_of(tee_account_id).unwrap();
+	info!("Enclave nonce = {:?}", nonce);
+	enclave
+		.set_nonce(nonce, parentchain_id)
+		.expect("Could not set nonce of enclave. Returning here...");
+
+	let metadata = node_api.metadata().clone();
+	let runtime_spec_version = node_api.runtime_version().spec_version;
+	let runtime_transaction_version = node_api.runtime_version().transaction_version;
+	enclave
+		.set_node_metadata(
+			NodeMetadata::new(metadata, runtime_spec_version, runtime_transaction_version).encode(),
+			parentchain_id,
+		)
+		.expect("Could not set the node metadata in the enclave");
+	(parentchain_handler, last_synced_header)
 }
 
 /// Start polling loop to wait until we have a worker for a shard registered on
@@ -625,93 +747,7 @@ fn print_events(events: Vec<Event>) {
 					},
 				}
 			},
-			RuntimeEvent::Teerex(re) => {
-				debug!("{:?}", re);
-				match &re {
-					my_node_runtime::pallet_teerex::Event::AddedSgxEnclave {
-						registered_by,
-						worker_url,
-						..
-					} => {
-						println!("[+] Received AddedEnclave event");
-						println!("    Sender (Worker):  {:?}", registered_by);
-						println!(
-							"    Registered URL: {:?}",
-							str::from_utf8(&worker_url.clone().unwrap_or("none".into())).unwrap()
-						);
-					},
-					_ => {
-						trace!("Ignoring unsupported pallet_teerex event");
-					},
-				}
-			},
-			RuntimeEvent::EnclaveBridge(re) => {
-				debug!("{:?}", re);
-				match &re {
-					my_node_runtime::pallet_enclave_bridge::Event::IndirectInvocationRegistered(
-						shard,
-					) => {
-						println!(
-							"[+] Received trusted call for shard {}",
-							shard.encode().to_base58()
-						);
-					},
-					my_node_runtime::pallet_enclave_bridge::Event::ProcessedParentchainBlock {
-						shard,
-						block_hash,
-						trusted_calls_merkle_root,
-						block_number,
-					} => {
-						info!("[+] Received ProcessedParentchainBlock event");
-						debug!("    for shard:    {:?}", shard);
-						debug!("    Block Hash: {:?}", hex::encode(block_hash));
-						debug!("    Merkle Root: {:?}", hex::encode(trusted_calls_merkle_root));
-						debug!("    Block Number: {:?}", block_number);
-					},
-					my_node_runtime::pallet_enclave_bridge::Event::ShieldFunds {
-						shard,
-						encrypted_beneficiary,
-						amount,
-					} => {
-						info!("[+] Received ShieldFunds event");
-						debug!("    for shard:    {:?}", shard);
-						debug!("    for enc. beneficiary:    {:?}", encrypted_beneficiary);
-						debug!("    Amount:    {:?}", amount);
-					},
-					my_node_runtime::pallet_enclave_bridge::Event::UnshieldedFunds {
-						shard,
-						beneficiary,
-						amount,
-					} => {
-						info!("[+] Received UnshieldedFunds event");
-						debug!("    for shard:    {:?}", shard);
-						debug!("    beneficiary:    {:?}", beneficiary);
-						debug!("    Amount:    {:?}", amount);
-					},
-					_ => {
-						trace!("Ignoring unsupported pallet_enclave_bridge event");
-					},
-				}
-			},
-			#[cfg(feature = "sidechain")]
-			RuntimeEvent::Sidechain(re) => match &re {
-				my_node_runtime::pallet_sidechain::Event::FinalizedSidechainBlock {
-					shard,
-					block_header_hash,
-					validateer,
-				} => {
-					info!("[+] Received FinalizedSidechainBlock event");
-					debug!("    for shard:    {:?}", shard);
-					debug!("    From:    {:?}", hex::encode(block_header_hash));
-					debug!("    validateer: {:?}", validateer);
-				},
-				_ => {
-					trace!("Ignoring unsupported pallet_sidechain event");
-				},
-			},
-			_ => {
-				trace!("Ignoring event {:?}", evr);
-			},
+			_ => ()
 		}
 	}
 }
@@ -810,8 +846,7 @@ fn send_extrinsic(
 		// Return without registering the enclave. This will fail and the transaction will be banned for 30min.
 		return None
 	}
-
-	info!("[>] send extrinsic");
+	info!("[>] send extrinsic to chain with genesis hash {}", api.genesis_hash());
 	trace!("  encoded extrinsic: 0x{:}", hex::encode(extrinsic.clone()));
 
 	// fixme: wait ...until_success doesn't work due to https://github.com/scs/substrate-api-client/issues/624

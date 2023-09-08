@@ -23,7 +23,7 @@ use itp_component_container::ComponentGetter;
 use itp_ocall_api::EnclaveOnChainOCallApi;
 use itp_stf_primitives::types::AccountId;
 use itp_storage::{storage_double_map_key, StorageHasher};
-use itp_types::{WorkerRequest, WorkerResponse};
+use itp_types::{WorkerRequest, WorkerResponse, parentchain::ParentchainId};
 use log::*;
 use std::cmp::min;
 
@@ -77,7 +77,7 @@ fn get_reputation_ocall_api(
 	trace!("storage_hash is : {}", hex::encode(storage_hash.clone()));
 
 	let requests = vec![WorkerRequest::ChainStorage(storage_hash, None)];
-	let mut resp: Vec<WorkerResponse<Vec<u8>>> = match ocall_api.worker_request(requests) {
+	let mut resp: Vec<WorkerResponse<Vec<u8>>> = match ocall_api.worker_request(requests, &ParentchainId::TargetA) {
 		Ok(response) => response,
 		Err(e) => {
 			error!("Worker response decode failed. Error: {:?}", e);

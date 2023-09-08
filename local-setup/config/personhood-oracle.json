@@ -1,7 +1,7 @@
 {
   "nodes": [
     {
-      "bin": "../integritee-node/target/release/integritee-node",
+      "bin": "bin/integritee-node",
       "flags": [
         "--tmp",
         "--dev",
@@ -16,6 +16,27 @@
         "--ws-external",
         "--rpc-external"
       ]
+    },
+    {
+      "bin": "bin/encointer-node-notee",
+      "flags": [
+        "--tmp",
+        "--dev",
+        "--force-authoring",
+        "--alice",
+        "-lruntime=info",
+        "-lencointer=debug",
+        "--ws-port",
+        "9966",
+        "--port",
+        "30395",
+        "--rpc-port",
+        "9955",
+        "--ws-external",
+        "--rpc-external",
+        "--enable-offchain-indexing",
+        "true"
+      ]
     }
   ],
   "workers": [
@@ -27,6 +48,10 @@
         "2000",
         "-p",
         "9944",
+        "--target-a-parentchain-rpc-url",
+        "ws://127.0.0.1",
+        "--target-a-parentchain-rpc-port",
+        "9966",
         "-r",
         "3490",
         "-w",

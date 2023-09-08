@@ -1,6 +1,6 @@
 [package]
 name = "integritee-cli"
-version = "0.9.0"
+version = "0.12.0"
 authors = ["Integritee AG <hello@integritee.network>"]
 edition = "2021"
 
@@ -24,16 +24,18 @@ sgx_crypto_helper = { branch = "master", git = "https://github.com/apache/teacla
 thiserror = "1.0"
 ws = { version = "0.9.1", features = ["ssl"] }
 
-my-node-runtime = { package = "encointer-node-notee-runtime", git = "https://github.com/encointer/encointer-node.git", branch = "community-sidechain" }
+my-node-runtime = { package = "integritee-node-runtime", git = "https://github.com/integritee-network/integritee-node.git", branch = "sdk-v0.12.0-polkadot-v0.9.42" }
 encointer-primitives = { branch = "polkadot-v0.9.42", git = "https://github.com/encointer/pallets", features = ["full_crypto"] }
 # TODO switch to upstream once `no_std` compatible, see issue #25
 nostr = { default-features = false, features = ["alloc", "nip19"], git = "https://github.com/OverOrion/nostr", branch = "no_std_upstream_working" }
 tungstenite = { version = "0.15.0", features = ["rustls-tls-webpki-roots"] }
 
-pallet-enclave-bridge = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
+# scs / integritee
+pallet-enclave-bridge = { git = "https://github.com/integritee-network/pallets.git", branch = "sdk-v0.12.0-polkadot-v0.9.42" }
 pallet-evm = { optional = true, git = "https://github.com/integritee-network/frontier.git", branch = "bar/polkadot-v0.9.42" }
-pallet-teerex = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
-enclave-bridge-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "polkadot-v0.9.42" }
+pallet-teerex = { git = "https://github.com/integritee-network/pallets.git", branch = "sdk-v0.12.0-polkadot-v0.9.42" }
+# `default-features = false` to remove the jsonrpsee dependency.
+enclave-bridge-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "sdk-v0.12.0-polkadot-v0.9.42" }
 substrate-api-client = { default-features = false, features = ["std", "ws-client"], git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
 substrate-client-keystore = { git = "https://github.com/scs/substrate-api-client.git", branch = "polkadot-v0.9.42-tag-v0.10.0" }
 

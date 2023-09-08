@@ -37,16 +37,16 @@ pub type ParentchainAssetTip = AssetTip<Balance>;
 /// Configuration for the ExtrinsicParams.
 ///
 /// Valid for the default integritee node
-//pub type ParentchainExtrinsicParams = GenericExtrinsicParams<ParentchainPlainTip, Index, Hash>;
-//pub type ParentchainAdditionalParams = GenericAdditionalParams<ParentchainPlainTip, Hash>;
-//pub type ParentchainSignedExtra = GenericSignedExtra<ParentchainPlainTip, Index>;
+pub type ParentchainExtrinsicParams = GenericExtrinsicParams<ParentchainPlainTip, Index, Hash>;
+pub type ParentchainAdditionalParams = GenericAdditionalParams<ParentchainPlainTip, Hash>;
+pub type ParentchainSignedExtra = GenericSignedExtra<ParentchainPlainTip, Index>;
 
-// Pay in asset fees.
+// Pay in asset fees if encointer-node community-sidechain branch.
 //
 // This needs to be used if the node uses the `pallet_asset_tx_payment`.
-pub type ParentchainExtrinsicParams = GenericExtrinsicParams<ParentchainAssetTip, Index, Hash>;
-pub type ParentchainAdditionalParams = GenericAdditionalParams<ParentchainAssetTip, Hash>;
-pub type ParentchainSignedExtra = GenericSignedExtra<ParentchainAssetTip, Index>;
+// pub type ParentchainExtrinsicParams = GenericExtrinsicParams<ParentchainAssetTip, Index, Hash>;
+// pub type ParentchainAdditionalParams = GenericAdditionalParams<ParentchainAssetTip, Hash>;
+// pub type ParentchainSignedExtra = GenericSignedExtra<ParentchainAssetTip, Index>;
 
 pub type ParentchainSignature = Signature<ParentchainSignedExtra>;
 pub type ParentchainUncheckedExtrinsic<Call> =
