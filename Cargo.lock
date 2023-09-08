@@ -852,7 +852,7 @@ dependencies = [
 [[package]]
 name = "common-primitives"
 version = "0.1.0"
-source = "git+https://github.com/integritee-network/pallets.git?branch=polkadot-v0.9.42#5c52182eb3a5156e8d9f69c10ca1441214ee6662"
+source = "git+https://github.com/integritee-network/pallets.git?branch=polkadot-v0.9.42#eaf611b79bc9d56b20c155150e99b549bf98436b"
 dependencies = [
  "derive_more",
  "parity-scale-codec",
@@ -3137,7 +3137,7 @@ dependencies = [
  "pallet-evm",
  "pallet-grandpa",
  "pallet-insecure-randomness-collective-flip",
- "pallet-parentchain 0.9.0 (git+https://github.com/integritee-network/pallets.git?branch=sdk-v0.12.0-polkadot-v0.9.42)",
+ "pallet-parentchain",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",
@@ -3179,7 +3179,7 @@ dependencies = [
  "itp-utils",
  "log 0.4.19",
  "pallet-balances",
- "pallet-parentchain 0.9.0 (git+https://github.com/integritee-network/pallets.git?branch=polkadot-v0.9.42)",
+ "pallet-parentchain",
  "pallet-sudo",
  "parity-scale-codec",
  "rlp",
@@ -5707,23 +5707,6 @@ dependencies = [
 [[package]]
 name = "pallet-parentchain"
 version = "0.9.0"
-source = "git+https://github.com/integritee-network/pallets.git?branch=polkadot-v0.9.42#5c52182eb3a5156e8d9f69c10ca1441214ee6662"
-dependencies = [
- "frame-support",
- "frame-system",
- "log 0.4.19",
- "parity-scale-codec",
- "scale-info",
- "serde 1.0.164",
- "sp-core",
- "sp-io 7.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42)",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-parentchain"
-version = "0.9.0"
 source = "git+https://github.com/integritee-network/pallets.git?branch=sdk-v0.12.0-polkadot-v0.9.42#eaf611b79bc9d56b20c155150e99b549bf98436b"
 dependencies = [
  "frame-support",
@@ -7399,7 +7382,7 @@ dependencies = [
 [[package]]
 name = "sgx-verify"
 version = "0.1.4"
-source = "git+https://github.com/integritee-network/pallets.git?branch=polkadot-v0.9.42#5c52182eb3a5156e8d9f69c10ca1441214ee6662"
+source = "git+https://github.com/integritee-network/pallets.git?branch=polkadot-v0.9.42#eaf611b79bc9d56b20c155150e99b549bf98436b"
 dependencies = [
  "base64 0.13.1",
  "chrono 0.4.26",
@@ -8656,7 +8639,7 @@ dependencies = [
 [[package]]
 name = "teerex-primitives"
 version = "0.1.0"
-source = "git+https://github.com/integritee-network/pallets.git?branch=polkadot-v0.9.42#5c52182eb3a5156e8d9f69c10ca1441214ee6662"
+source = "git+https://github.com/integritee-network/pallets.git?branch=polkadot-v0.9.42#eaf611b79bc9d56b20c155150e99b549bf98436b"
 dependencies = [
  "common-primitives 0.1.0 (git+https://github.com/integritee-network/pallets.git?branch=polkadot-v0.9.42)",
  "derive_more",
