@@ -9,6 +9,7 @@ The node and workers logs are piped to `./log/node.log` etc. folder in the curre
 run: `cd local-setup && tmux_logger.sh` to automatically `tail -f` these three logs.
 
 """
+import os
 import argparse
 import json
 import signal
@@ -34,8 +35,13 @@ def setup_worker(work_dir: str, source_dir: str, std_err: Union[None, int, IO]):
 def run_node(config, i: int):
     node_log = open(f'{log_dir}/node{i}.log', 'w+')
     node_cmd = [config["bin"]] + config["flags"]
+    env = dict(os.environ, RUST_LOG='info,teerex=debug,'
+                'encointer=debug,runtime=debug,'
+                'sc_basic_authorship=warn,'
+               'aura=warn,'
+               'jsonrpsee_server=warn')
     print(f'Run node {i} with command: {node_cmd}')
-    return Popen(node_cmd, stdout=node_log, stderr=STDOUT, bufsize=1)
+    return Popen(node_cmd, stdout=node_log, env=env, stderr=STDOUT, bufsize=1)
 
 
 def run_worker(config, i: int):

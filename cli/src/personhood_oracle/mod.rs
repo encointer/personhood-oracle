@@ -17,12 +17,11 @@
 
 use crate::{
 	personhood_oracle::{
-		commands::{FetchReputationCmd, IssueNostrBadgeCmd},
-		PersonhoodOracleCommand::{FetchReputation, IssueNostrBadge},
+		commands::{FetchReputationCmd, IssueNodeTemplateXtCmd, IssueNostrBadgeCmd},
+		PersonhoodOracleCommand::{FetchReputation, IssueNodeTemplateXt, IssueNostrBadge},
 	},
 	Cli,
 };
-
 mod commands;
 
 /// Oracle subcommands for the cli.
@@ -30,6 +29,7 @@ mod commands;
 pub enum PersonhoodOracleCommand {
 	FetchReputation(FetchReputationCmd),
 	IssueNostrBadge(IssueNostrBadgeCmd),
+	IssueNodeTemplateXt(IssueNodeTemplateXtCmd),
 }
 
 impl PersonhoodOracleCommand {
@@ -37,6 +37,7 @@ impl PersonhoodOracleCommand {
 		match self {
 			FetchReputation(fetch_reputation_cmd) => fetch_reputation_cmd.run(cli),
 			IssueNostrBadge(issue_nostr_badge_cmd) => issue_nostr_badge_cmd.run(cli),
+			IssueNodeTemplateXt(issue_node_template_xt_cmd) => issue_node_template_xt_cmd.run(cli),
 		}
 	}
 }

@@ -108,6 +108,19 @@ pub(crate) fn get_validator_accessor_from_solo_or_parachain(
 	Ok(validator_accessor)
 }
 
+pub(crate) fn get_validator_accessor_from_target_b_solo_or_parachain(
+) -> Result<Arc<EnclaveValidatorAccessor>> {
+	let validator_accessor =
+		if let Ok(solochain_handler) = GLOBAL_TARGET_B_SOLOCHAIN_HANDLER_COMPONENT.get() {
+			solochain_handler.validator_accessor.clone()
+		} else if let Ok(parachain_handler) = GLOBAL_TARGET_B_PARACHAIN_HANDLER_COMPONENT.get() {
+			parachain_handler.validator_accessor.clone()
+		} else {
+			return Err(Error::NoTargetBParentchainAssigned)
+		};
+	Ok(validator_accessor)
+}
+
 pub(crate) fn get_node_metadata_repository_from_integritee_solo_or_parachain(
 ) -> Result<Arc<EnclaveNodeMetadataRepository>> {
 	let metadata_repository =
@@ -156,6 +169,19 @@ pub(crate) fn get_extrinsic_factory_from_solo_or_parachain() -> Result<Arc<Encla
 			parachain_handler.extrinsics_factory.clone()
 		} else {
 			return Err(Error::NoIntegriteeParentchainAssigned)
+		};
+	Ok(extrinsics_factory)
+}
+
+pub(crate) fn get_extrinsic_factory_from_target_b_solo_or_parachain(
+) -> Result<Arc<EnclaveExtrinsicsFactory>> {
+	let extrinsics_factory =
+		if let Ok(solochain_handler) = GLOBAL_TARGET_B_SOLOCHAIN_HANDLER_COMPONENT.get() {
+			solochain_handler.extrinsics_factory.clone()
+		} else if let Ok(parachain_handler) = GLOBAL_TARGET_B_PARACHAIN_HANDLER_COMPONENT.get() {
+			parachain_handler.extrinsics_factory.clone()
+		} else {
+			return Err(Error::NoTargetBParentchainAssigned)
 		};
 	Ok(extrinsics_factory)
 }
