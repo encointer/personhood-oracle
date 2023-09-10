@@ -18,7 +18,7 @@
 #![cfg_attr(test, feature(assert_matches))]
 
 #[cfg(feature = "teeracle")]
-use crate::teeracle::{schedule_periodic_reregistration_thread};
+use crate::teeracle::schedule_periodic_reregistration_thread;
 
 #[cfg(not(feature = "dcap"))]
 use crate::utils::check_files;
@@ -463,8 +463,12 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	// ------------------------------------------------------------------------
 	// Init parentchain specific stuff. Needed for parentchain communication.
 
-	let (parentchain_handler, last_synced_header) =
-		init_parentchain(&enclave, &integritee_rpc_api, &tee_accountid, ParentchainId::Integritee);
+	let (parentchain_handler, last_synced_header) = init_parentchain(
+		&enclave,
+		&integritee_rpc_api,
+		Some(tee_accountid.clone()),
+		ParentchainId::Integritee,
+	);
 
 	#[cfg(feature = "dcap")]
 	register_collateral(
@@ -591,19 +595,13 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	}
 
 	if let Some(url) = config.target_a_parentchain_rpc_endpoint() {
-		init_target_parentchain(
-			&enclave,
-			&tee_accountid,
-			url,
-			ParentchainId::TargetA,
-			is_development_mode,
-		)
+		init_target_parentchain(&enclave, None, url, ParentchainId::TargetA, is_development_mode)
 	}
 
 	if let Some(url) = config.target_b_parentchain_rpc_endpoint() {
 		init_target_parentchain(
 			&enclave,
-			&tee_accountid,
+			Some(tee_accountid.clone()),
 			url,
 			ParentchainId::TargetB,
 			is_development_mode,
@@ -624,7 +622,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 
 fn init_target_parentchain<E>(
 	enclave: &Arc<E>,
-	tee_account_id: &AccountId32,
+	tee_account_id: Option<AccountId32>,
 	url: String,
 	parentchain_id: ParentchainId,
 	is_development_mode: bool,
@@ -637,10 +635,14 @@ fn init_target_parentchain<E>(
 		.unwrap_or_else(|_| panic!("[{:?}] Failed to create parentchain node API", parentchain_id));
 
 	// some random bytes not too small to ensure that the enclave has enough funds
-	setup_account_funding(&node_api, tee_account_id, [0u8; 100].into(), is_development_mode)
-		.unwrap_or_else(|_| {
-			panic!("[{:?}] Could not fund parentchain enclave account", parentchain_id)
-		});
+	if let Some(ref account) = tee_account_id {
+		setup_account_funding(&node_api, &account, [0u8; 100].into(), is_development_mode)
+			.unwrap_or_else(|e| {
+				panic!("[{:?}] Could not fund parentchain enclave account: {}", parentchain_id, e)
+			});
+	} else {
+		debug!("skipping enclave account funding for {:?}", parentchain_id);
+	};
 
 	let (parentchain_handler, last_synched_header) =
 		init_parentchain(enclave, &node_api, tee_account_id, parentchain_id);
@@ -690,7 +692,7 @@ fn init_target_parentchain<E>(
 fn init_parentchain<E>(
 	enclave: &Arc<E>,
 	node_api: &ParentchainApi,
-	tee_account_id: &AccountId32,
+	tee_account_id: Option<AccountId32>,
 	parentchain_id: ParentchainId,
 ) -> (Arc<ParentchainHandler<ParentchainApi, E>>, Header)
 where
@@ -707,11 +709,15 @@ where
 	let last_synced_header = parentchain_handler.init_parentchain_components().unwrap();
 	println!("[{:?}] last synced parentchain block: {}", parentchain_id, last_synced_header.number);
 
-	let nonce = node_api.get_nonce_of(tee_account_id).unwrap();
-	info!("[{:?}] Enclave nonce = {:?}", parentchain_id, nonce);
-	enclave.set_nonce(nonce, parentchain_id).unwrap_or_else(|_| {
-		panic!("[{:?}] Could not set nonce of enclave. Returning here...", parentchain_id)
-	});
+	if let Some(account) = tee_account_id {
+		let nonce = node_api.get_nonce_of(&account).unwrap();
+		info!("[{:?}] Enclave nonce = {:?}", parentchain_id, nonce);
+		enclave.set_nonce(nonce, parentchain_id).unwrap_or_else(|_| {
+			panic!("[{:?}] Could not set nonce of enclave. Returning here...", parentchain_id)
+		});
+	} else {
+		debug!("skipping enclave account nonce caching for {:?}", parentchain_id);
+	};
 
 	let metadata = node_api.metadata().clone();
 	let runtime_spec_version = node_api.runtime_version().spec_version;
@@ -783,7 +789,7 @@ fn print_events(events: Vec<Event>) {
 					},
 				}
 			},
-			_ => ()
+			_ => (),
 		}
 	}
 }

@@ -92,7 +92,11 @@ pub fn setup_account_funding(
 
 // Alice plays the faucet and sends some funds to the account if balance is low
 fn ensure_account_has_funds(api: &ParentchainApi, accountid: &AccountId32) -> Result<(), Error> {
-	info!("Ensuring funds for Account: {} on chain with genesis hash {}", accountid, api.genesis_hash());
+	info!(
+		"Ensuring funds for Account: {} on chain with genesis hash {}",
+		accountid,
+		api.genesis_hash()
+	);
 	// check account balance
 	let free_balance = api.get_free_balance(accountid)?;
 	info!("TEE's free balance = {:?} (Account: {})", free_balance, accountid);
@@ -153,14 +157,26 @@ fn bootstrap_funds_from_alice(
 	let mut alice_signer_api = api.clone();
 	alice_signer_api.set_signer(ParentchainExtrinsicSigner::new(alice));
 
-	println!("[+] send extrinsic: bootstrap funding Enclave from Alice's funds");
+	println!(
+		"[+] send extrinsic: bootstrap funding Enclave from Alice's funds (genesis hash {})",
+		api.genesis_hash()
+	);
 	let xt = alice_signer_api
 		.balance_transfer_allow_death(MultiAddress::Id(accountid.clone()), funding_amount);
-	let xt_report = alice_signer_api.submit_and_watch_extrinsic_until_success(xt, false)?;
-	info!(
-		"[<] L1 extrinsic success. extrinsic hash: {:?} / status: {:?}",
-		xt_report.extrinsic_hash, xt_report.status
-	);
+	alice_signer_api
+		.submit_and_watch_extrinsic_until_success(xt, false)
+		.map_or_else(
+			|e| {
+				error!("{:?}", e);
+			},
+			|v| {
+				info!(
+					"[<] L1 extrinsic success. extrinsic hash: {:?} / status: {:?}",
+					v.extrinsic_hash, v.status
+				);
+			},
+		);
+
 	// Verify funds have arrived.
 	let free_balance = alice_signer_api.get_free_balance(accountid);
 	trace!("TEE's NEW free balance = {:?}", free_balance);

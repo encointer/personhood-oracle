@@ -26,6 +26,16 @@ cargo build --release
 cp target/release/integritee-node ../personhood-oracle/bin/
 ```
 
+build substrate node-template
+
+```
+git clone https://github.com/paritytech/substrate.git
+cd substrate
+git checkout polkadot-v0.9.42
+cargo build --release -p node-template
+cp target/release/node-template ../personhood-oracle/bin/
+```
+
 setup development environment in docker:
 
 ```
