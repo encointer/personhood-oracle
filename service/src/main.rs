@@ -615,7 +615,7 @@ fn start_worker<E, T, D, InitializationHandler, WorkerModeProvider>(
 	println!("[+] [{:?}] Subscribed to events. waiting...", ParentchainId::Integritee);
 	loop {
 		if let Some(Ok(events)) = subscription.next_event::<RuntimeEvent, Hash>() {
-			print_events(events)
+			print_events(events, ParentchainId::Integritee)
 		}
 	}
 }
@@ -683,7 +683,7 @@ fn init_target_parentchain<E>(
 		.name(format!("{:?}_parentchain_event_subscription", parentchain_id))
 		.spawn(move || loop {
 			if let Some(Ok(events)) = subscription.next_event::<RuntimeEvent, Hash>() {
-				print_events(events)
+				print_events(events, parentchain_id)
 			}
 		})
 		.unwrap();
@@ -767,9 +767,9 @@ fn spawn_worker_for_shard_polling<InitializationHandler>(
 	});
 }
 
-fn print_events(events: Vec<Event>) {
+fn print_events(events: Vec<Event>, parentchain_id: ParentchainId) {
 	for evr in &events {
-		debug!("Decoded: phase = {:?}, event = {:?}", evr.phase, evr.event);
+		debug!("[{:?}] Decoded: phase = {:?}, event = {:?}", parentchain_id, evr.phase, evr.event);
 		match &evr.event {
 			RuntimeEvent::Balances(be) => {
 				info!("[+] Received balances event");

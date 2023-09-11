@@ -160,6 +160,7 @@ class Worker:
                                         'enclave_runtime=info,'
                                         'integritee_service=warn,'
                                         'itp_stf_state_handler=debug,'
+                                        'itp_extrinsics_factory=trace,'
                                         'its_consensus_common=debug,'
                                         'its_consensus_aura=trace,'
                                         'itc_parentchain_indirect_calls_executor=info,'

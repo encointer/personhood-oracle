@@ -546,10 +546,11 @@ fn issue_node_template_xt_inner(params: Params) -> Result<(), String> {
 	println!("subject index on template is {}", subject_template_idx);
 
 	let call = OpaqueCall::from_tuple(&((7u8, 0u8), subject_template_idx));
-	println!("encoded call: {}", hex::encode(call.encode()));
+	println!("encoded call: 0x{}", hex::encode(call.encode()));
 	let extrinsics_factory = get_extrinsic_factory_from_target_b_solo_or_parachain().unwrap();
-	let extrinsics = extrinsics_factory.create_extrinsics(&[call], None).unwrap();
-	println!("extrinsics: {:?}", extrinsics);
+	let extrinsics: Vec<OpaqueExtrinsic> =
+		extrinsics_factory.create_extrinsics(&[call], None).unwrap();
+	println!("sending {} extrinsics: {:?}", extrinsics.len(), extrinsics);
 	let validator_access = get_validator_accessor_from_target_b_solo_or_parachain().unwrap();
 	validator_access
 		.execute_mut_on_validator(|v| v.send_extrinsics(extrinsics))

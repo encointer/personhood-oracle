@@ -129,6 +129,7 @@ where
 				extrinsics.len(),
 				parentchain_id
 			);
+			trace!("extrinsics: {:?}", extrinsics);
 			let api = self.create_api(parentchain_id)?;
 			for call in extrinsics.into_iter() {
 				if let Err(e) = api.submit_opaque_extrinsic(call.encode().into()) {

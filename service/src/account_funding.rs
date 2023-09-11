@@ -16,6 +16,7 @@
 */
 
 use crate::error::{Error, ServiceResult};
+use codec::Encode;
 use itp_node_api::api_client::{AccountApi, ParentchainApi, ParentchainExtrinsicSigner};
 use itp_settings::worker::{
 	EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS, REGISTERING_FEE_FACTOR_FOR_INIT_FUNDS,
@@ -24,6 +25,7 @@ use itp_types::parentchain::Balance;
 use log::*;
 use sp_core::{
 	crypto::{AccountId32, Ss58Codec},
+	hexdisplay::AsBytesRef,
 	Pair,
 };
 use sp_keyring::AccountKeyring;
@@ -31,7 +33,6 @@ use sp_runtime::MultiAddress;
 use substrate_api_client::{
 	extrinsic::BalancesExtrinsics, GetBalance, GetTransactionPayment, SubmitAndWatchUntilSuccess,
 };
-
 /// Information about the enclave on-chain account.
 pub trait EnclaveAccountInfo {
 	fn free_balance(&self) -> ServiceResult<Balance>;
@@ -103,9 +104,26 @@ fn ensure_account_has_funds(api: &ParentchainApi, accountid: &AccountId32) -> Re
 
 	let existential_deposit = api.get_existential_deposit()?;
 	info!("Existential deposit is = {:?}", existential_deposit);
+	let balance_transfer_fee = api
+		.get_fee_details(
+			api.balance_transfer_allow_death(
+				MultiAddress::Address32([0u8; 32]),
+				existential_deposit,
+			)
+			.encode()
+			.into(),
+			None,
+		)
+		.unwrap()
+		.unwrap()
+		.inclusion_fee
+		.unwrap()
+		.inclusion_fee();
+	info!("Balance Transfer Fee is = {:?}", balance_transfer_fee);
 
-	let min_required_funds =
-		existential_deposit.saturating_mul(EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS);
+	let min_required_funds = existential_deposit
+		.saturating_mul(EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS)
+		.saturating_add(balance_transfer_fee.saturating_mul(100));
 	let missing_funds = min_required_funds.saturating_sub(free_balance);
 
 	if missing_funds > 0 {
