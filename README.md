@@ -114,3 +114,12 @@ you may need to make sure to subscribe to relay.damus.io in settings
 
 find the badge definition published here:
 https://badges.page/b/naddr1qqx8qetjwdhku6r0daj97vgzypz2eydm7k6h8cs4wf9n5ylwux8vatzc9sdhjqnw02nnnx7kkuvluqcyqqq82wgtjchvs
+
+
+## helpful snippets for demo screencast
+
+echo "" > ../log/node1.log
+export GREP_COLOR='1;33;96'
+clear && tail -f ../log/node1.log | sed -u 's/^.*tokio-runtime-worker\s*//'  | grep --color 'teerex\|$'
+source ~/.bashrc  > ../log/worker1.log
+clear && tail -n20 -f ../log/worker1.log | grep --color 'SomethingStored\|$'
