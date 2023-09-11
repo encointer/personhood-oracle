@@ -543,7 +543,7 @@ fn issue_node_template_xt_inner(params: Params) -> Result<(), String> {
 	let subject_template_idx: u32 = Decode::decode(&mut subject_template_idx_bytes.as_slice())
 		.map_err(|e| format!("{:?}", e))?;
 
-	println!("subject index on node-template is {}", subject_template_idx);
+	println!("[RPC] caller subject index on node-template is {}", subject_template_idx);
 
 	let call = OpaqueCall::from_tuple(&((7u8, 0u8), subject_template_idx));
 	let extrinsics_factory = get_extrinsic_factory_from_target_b_solo_or_parachain().unwrap();

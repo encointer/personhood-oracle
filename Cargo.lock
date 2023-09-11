@@ -9,7 +9,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
 dependencies = [
  "lazy_static",
- "regex 1.8.4",
+ "regex 1.9.5",
 ]
 
 [[package]]
@@ -155,7 +155,7 @@ version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc936419f96fa211c1b9166887b38e5e40b19958e5b895be7c1f93adec7071ac"
 dependencies = [
- "memchr 2.5.0",
+ "memchr 2.6.3",
 ]
 
 [[package]]
@@ -164,7 +164,7 @@ version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43f6cb1bf222025340178f382c426f13757b2960e89779dfcb319c32542a5a41"
 dependencies = [
- "memchr 2.5.0",
+ "memchr 2.6.3",
 ]
 
 [[package]]
@@ -380,7 +380,7 @@ dependencies = [
 [[package]]
 name = "binary-merkle-tree"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "hash-db 0.16.0",
  "log 0.4.19",
@@ -409,7 +409,7 @@ dependencies = [
  "peeking_take_while",
  "proc-macro2",
  "quote",
- "regex 1.8.4",
+ "regex 1.9.5",
  "rustc-hash",
  "shlex",
 ]
@@ -557,7 +557,7 @@ version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a246e68bb43f6cd9db24bea052a53e40405417c5fb372e3d1a8a7f770a564ef5"
 dependencies = [
- "memchr 2.5.0",
+ "memchr 2.6.3",
  "serde 1.0.164",
 ]
 
@@ -1395,13 +1395,139 @@ dependencies = [
 ]
 
 [[package]]
+name = "encointer-balances-tx-payment"
+version = "1.0.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "frame-system",
+ "log 0.4.19",
+ "pallet-asset-tx-payment",
+ "pallet-encointer-balances",
+ "pallet-encointer-ceremonies",
+ "pallet-transaction-payment",
+ "sp-runtime",
+]
+
+[[package]]
+name = "encointer-balances-tx-payment-rpc-runtime-api"
+version = "1.0.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-api",
+ "sp-std",
+]
+
+[[package]]
+name = "encointer-ceremonies-assignment"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "encointer-meetup-validation"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "parity-scale-codec",
+ "scale-info",
+ "serde 1.0.164",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "encointer-node-notee-runtime"
+version = "1.5.26"
+source = "git+https://github.com/encointer/encointer-node.git?branch=polkadot-v0.9.42#6f5d7bf1275823bcbf2e5d9a17a8fdd2fb9efe11"
+dependencies = [
+ "encointer-balances-tx-payment",
+ "encointer-balances-tx-payment-rpc-runtime-api",
+ "encointer-primitives 1.3.0",
+ "frame-executive",
+ "frame-support",
+ "frame-system",
+ "frame-system-rpc-runtime-api",
+ "frame-try-runtime",
+ "pallet-asset-tx-payment",
+ "pallet-aura",
+ "pallet-balances",
+ "pallet-encointer-balances",
+ "pallet-encointer-bazaar",
+ "pallet-encointer-bazaar-rpc-runtime-api",
+ "pallet-encointer-ceremonies",
+ "pallet-encointer-ceremonies-rpc-runtime-api",
+ "pallet-encointer-communities",
+ "pallet-encointer-communities-rpc-runtime-api",
+ "pallet-encointer-faucet",
+ "pallet-encointer-reputation-commitments",
+ "pallet-encointer-scheduler",
+ "pallet-grandpa",
+ "pallet-insecure-randomness-collective-flip",
+ "pallet-proxy",
+ "pallet-scheduler",
+ "pallet-sudo",
+ "pallet-timestamp",
+ "pallet-transaction-payment",
+ "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-treasury",
+ "pallet-utility",
+ "parity-scale-codec",
+ "scale-info",
+ "serde 1.0.164",
+ "sp-api",
+ "sp-block-builder",
+ "sp-consensus-aura",
+ "sp-core",
+ "sp-inherents",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-session",
+ "sp-staking",
+ "sp-std",
+ "sp-transaction-pool",
+ "sp-version",
+ "substrate-wasm-builder",
+]
+
+[[package]]
 name = "encointer-primitives"
 version = "1.2.0"
 source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42#14f07b21ba4042ee6eaa4aa8dc9677002230743d"
 dependencies = [
  "bs58",
  "crc",
- "ep-core",
+ "ep-core 1.2.0 (git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42)",
+ "frame-support",
+ "geohash",
+ "log 0.4.19",
+ "parity-scale-codec",
+ "scale-info",
+ "serde 1.0.164",
+ "sp-core",
+ "sp-io 7.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42)",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "encointer-primitives"
+version = "1.3.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "bs58",
+ "crc",
+ "ep-core 1.2.0 (git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0)",
  "frame-support",
  "geohash",
  "log 0.4.19",
@@ -1423,7 +1549,7 @@ dependencies = [
  "atty",
  "humantime",
  "log 0.4.19",
- "regex 1.8.4",
+ "regex 1.9.5",
  "termcolor",
 ]
 
@@ -1436,7 +1562,7 @@ dependencies = [
  "humantime",
  "is-terminal",
  "log 0.4.19",
- "regex 1.8.4",
+ "regex 1.9.5",
  "termcolor",
 ]
 
@@ -1457,6 +1583,22 @@ checksum = "e48c92028aaa870e83d51c64e5d4e0b6981b360c522198c23959f219a4e1b15b"
 name = "ep-core"
 version = "1.2.0"
 source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42#14f07b21ba4042ee6eaa4aa8dc9677002230743d"
+dependencies = [
+ "impl-serde 0.3.2",
+ "parity-scale-codec",
+ "scale-info",
+ "serde 1.0.164",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+ "substrate-fixed",
+]
+
+[[package]]
+name = "ep-core"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
 dependencies = [
  "impl-serde 0.3.2",
  "parity-scale-codec",
@@ -1849,7 +1991,7 @@ dependencies = [
 [[package]]
 name = "frame-election-provider-solution-type"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -1860,7 +2002,7 @@ dependencies = [
 [[package]]
 name = "frame-election-provider-support"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "frame-election-provider-solution-type",
  "frame-support",
@@ -2005,7 +2147,7 @@ dependencies = [
 [[package]]
 name = "frame-system-benchmarking"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -2024,6 +2166,18 @@ source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.4
 dependencies = [
  "parity-scale-codec",
  "sp-api",
+]
+
+[[package]]
+name = "frame-try-runtime"
+version = "0.10.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
+dependencies = [
+ "frame-support",
+ "parity-scale-codec",
+ "sp-api",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -2241,7 +2395,7 @@ dependencies = [
  "futures-macro 0.3.28",
  "futures-sink 0.3.28",
  "futures-task 0.3.28",
- "memchr 2.5.0",
+ "memchr 2.6.3",
  "pin-project-lite",
  "pin-utils",
  "slab 0.4.8",
@@ -2351,7 +2505,7 @@ dependencies = [
  "bstr",
  "fnv 1.0.7",
  "log 0.4.19",
- "regex 1.8.4",
+ "regex 1.9.5",
 ]
 
 [[package]]
@@ -2867,7 +3021,7 @@ dependencies = [
  "chrono 0.4.26",
  "clap 3.2.25",
  "enclave-bridge-primitives",
- "encointer-primitives",
+ "encointer-primitives 1.2.0",
  "env_logger 0.9.3",
  "frame-system",
  "hdrhistogram",
@@ -2965,7 +3119,8 @@ dependencies = [
  "clap 2.34.0",
  "dirs",
  "enclave-bridge-primitives",
- "encointer-primitives",
+ "encointer-node-notee-runtime",
+ "encointer-primitives 1.2.0",
  "env_logger 0.9.3",
  "frame-support",
  "frame-system",
@@ -2996,12 +3151,14 @@ dependencies = [
  "lazy_static",
  "log 0.4.19",
  "mockall",
+ "node-template-runtime",
  "pallet-balances",
  "parity-scale-codec",
  "parking_lot 0.12.1",
  "parse_duration",
  "primitive-types",
  "prometheus",
+ "regex 1.9.5",
  "scale-info",
  "serde 1.0.164",
  "serde_derive 1.0.164",
@@ -4734,7 +4891,7 @@ version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f099785f7595cc4b4553a174ce30dd7589ef93391ff414dbb67f62392b9e0ce1"
 dependencies = [
- "regex-automata",
+ "regex-automata 0.1.10",
 ]
 
 [[package]]
@@ -4764,9 +4921,9 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.5.0"
+version = "2.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
+checksum = "8f232d6ef707e1956a43342693d2a31e72989554d58299d7a88738cc95b0d35c"
 
 [[package]]
 name = "memfd"
@@ -4983,7 +5140,7 @@ dependencies = [
  "http 0.2.9",
  "httparse 1.8.0",
  "log 0.4.19",
- "memchr 2.5.0",
+ "memchr 2.6.3",
  "mime",
  "spin 0.9.8",
  "version_check",
@@ -5087,6 +5244,43 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43794a0ace135be66a25d3ae77d41b91615fb68ae937f904090203e81f755b65"
 
 [[package]]
+name = "node-template-runtime"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
+dependencies = [
+ "frame-benchmarking",
+ "frame-executive",
+ "frame-support",
+ "frame-system",
+ "frame-system-benchmarking",
+ "frame-system-rpc-runtime-api",
+ "frame-try-runtime",
+ "pallet-aura",
+ "pallet-balances",
+ "pallet-grandpa",
+ "pallet-sudo",
+ "pallet-template",
+ "pallet-timestamp",
+ "pallet-transaction-payment",
+ "pallet-transaction-payment-rpc-runtime-api",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-api",
+ "sp-block-builder",
+ "sp-consensus-aura",
+ "sp-consensus-grandpa",
+ "sp-core",
+ "sp-inherents",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-session",
+ "sp-std",
+ "sp-transaction-pool",
+ "sp-version",
+ "substrate-wasm-builder",
+]
+
+[[package]]
 name = "nodrop"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5104,7 +5298,7 @@ version = "7.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
 dependencies = [
- "memchr 2.5.0",
+ "memchr 2.6.3",
  "minimal-lexical",
 ]
 
@@ -5367,7 +5561,7 @@ dependencies = [
  "crc32fast",
  "hashbrown 0.12.3",
  "indexmap 1.9.3",
- "memchr 2.5.0",
+ "memchr 2.6.3",
 ]
 
 [[package]]
@@ -5376,7 +5570,7 @@ version = "0.30.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03b4680b86d9cfafba8fc491dc9b6df26b68cf40e9e6cd73909194759a63c385"
 dependencies = [
- "memchr 2.5.0",
+ "memchr 2.6.3",
 ]
 
 [[package]]
@@ -5465,9 +5659,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4d5d9eb14b174ee9aa2ef96dc2b94637a2d4b6e7cb873c7e171f0c20c6cf3eac"
 
 [[package]]
+name = "pallet-asset-tx-payment"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-transaction-payment",
+ "parity-scale-codec",
+ "scale-info",
+ "serde 1.0.164",
+ "sp-core",
+ "sp-io 7.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42)",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-assets"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -5545,7 +5757,7 @@ dependencies = [
 [[package]]
 name = "pallet-contracts"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "bitflags",
  "environmental 1.1.4",
@@ -5574,7 +5786,7 @@ dependencies = [
 [[package]]
 name = "pallet-contracts-primitives"
 version = "7.0.0"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "bitflags",
  "parity-scale-codec",
@@ -5587,7 +5799,7 @@ dependencies = [
 [[package]]
 name = "pallet-contracts-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5613,6 +5825,171 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "teerex-primitives",
+]
+
+[[package]]
+name = "pallet-encointer-balances"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "frame-system",
+ "log 0.4.19",
+ "pallet-asset-tx-payment",
+ "pallet-transaction-payment",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-encointer-bazaar"
+version = "1.1.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "frame-system",
+ "log 0.4.19",
+ "pallet-encointer-communities",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-encointer-bazaar-rpc-runtime-api"
+version = "1.0.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "sp-api",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-encointer-ceremonies"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-ceremonies-assignment",
+ "encointer-meetup-validation",
+ "encointer-primitives 1.3.0",
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log 0.4.19",
+ "pallet-encointer-balances",
+ "pallet-encointer-communities",
+ "pallet-encointer-scheduler",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io 7.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42)",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-encointer-ceremonies-rpc-runtime-api"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "sp-api",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-encointer-communities"
+version = "1.3.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "frame-system",
+ "log 0.4.19",
+ "pallet-encointer-balances",
+ "pallet-encointer-scheduler",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-io 7.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42)",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-encointer-communities-rpc-runtime-api"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "sp-api",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-encointer-faucet"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "approx",
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "frame-system",
+ "log 0.4.19",
+ "pallet-encointer-communities",
+ "pallet-encointer-reputation-commitments",
+ "pallet-treasury",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-encointer-reputation-commitments"
+version = "1.2.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "approx",
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "frame-system",
+ "log 0.4.19",
+ "pallet-encointer-ceremonies",
+ "pallet-encointer-communities",
+ "pallet-encointer-scheduler",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-encointer-scheduler"
+version = "1.1.0"
+source = "git+https://github.com/encointer/pallets?branch=polkadot-v0.9.42-pallets-v1.3.0#fd903c2a9044dc137ee431e85b33e98cb935ffe5"
+dependencies = [
+ "encointer-primitives 1.3.0",
+ "frame-support",
+ "frame-system",
+ "impl-trait-for-tuples",
+ "log 0.4.19",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -5803,7 +6180,7 @@ dependencies = [
 [[package]]
 name = "pallet-staking"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "frame-benchmarking",
  "frame-election-provider-support",
@@ -5875,6 +6252,18 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "teerex-primitives",
+]
+
+[[package]]
+name = "pallet-template"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
 ]
 
 [[package]]
@@ -6102,7 +6491,7 @@ checksum = "7037e5e93e0172a5a96874380bf73bc6ecef022e26fa25f2be26864d6b3ba95d"
 dependencies = [
  "lazy_static",
  "num 0.2.1",
- "regex 1.8.4",
+ "regex 1.9.5",
 ]
 
 [[package]]
@@ -6257,7 +6646,7 @@ dependencies = [
  "itertools",
  "normalize-line-endings",
  "predicates-core",
- "regex 1.8.4",
+ "regex 1.9.5",
 ]
 
 [[package]]
@@ -6379,7 +6768,7 @@ dependencies = [
  "fnv 1.0.7",
  "lazy_static",
  "libc",
- "memchr 2.5.0",
+ "memchr 2.6.3",
  "parking_lot 0.12.1",
  "procfs",
  "protobuf",
@@ -6665,13 +7054,14 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.8.4"
+version = "1.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0ab3ca65655bb1e41f2a8c8cd662eb4fb035e67c3f78da1d61dffe89d07300f"
+checksum = "697061221ea1b4a94a624f67d0ae2bfe4e22b8a17b6a192afb11046542cc8c47"
 dependencies = [
  "aho-corasick 1.0.2",
- "memchr 2.5.0",
- "regex-syntax 0.7.2",
+ "memchr 2.6.3",
+ "regex-automata 0.3.8",
+ "regex-syntax 0.7.5",
 ]
 
 [[package]]
@@ -6681,6 +7071,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c230d73fb8d8c1b9c0b3135c5142a8acee3a0558fb8db5cf1cb65f8d7862132"
 dependencies = [
  "regex-syntax 0.6.29",
+]
+
+[[package]]
+name = "regex-automata"
+version = "0.3.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2f401f4955220693b56f8ec66ee9c78abffd8d1c4f23dc41a23839eb88f0795"
+dependencies = [
+ "aho-corasick 1.0.2",
+ "memchr 2.6.3",
+ "regex-syntax 0.7.5",
 ]
 
 [[package]]
@@ -6699,9 +7100,9 @@ checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
 
 [[package]]
 name = "regex-syntax"
-version = "0.7.2"
+version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "436b050e76ed2903236f032a59761c1eb99e1b0aead2c257922771dab1fc8c78"
+checksum = "dbb5fb1acd8a1a18b3dd5be62d25485eb770e05afb408a9627d14d451bae12da"
 
 [[package]]
 name = "rfc6979"
@@ -7014,7 +7415,7 @@ dependencies = [
 [[package]]
 name = "sc-keystore"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "array-bytes 4.2.0",
  "async-trait",
@@ -7923,7 +8324,7 @@ dependencies = [
  "paste",
  "primitive-types",
  "rand 0.8.5",
- "regex 1.8.4",
+ "regex 1.9.5",
  "scale-info",
  "schnorrkel",
  "secp256k1 0.24.3",
@@ -8055,7 +8456,7 @@ dependencies = [
 [[package]]
 name = "sp-keyring"
 version = "7.0.0"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "lazy_static",
  "sp-core",
@@ -8100,7 +8501,7 @@ dependencies = [
 [[package]]
 name = "sp-npos-elections"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#569aae5341ea0c1d10426fa1ec13a36c0b64393b"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -8128,7 +8529,7 @@ source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.4
 dependencies = [
  "backtrace",
  "lazy_static",
- "regex 1.8.4",
+ "regex 1.9.5",
 ]
 
 [[package]]
@@ -8976,7 +9377,7 @@ dependencies = [
  "chrono 0.4.26",
  "lazy_static",
  "matchers",
- "regex 1.8.4",
+ "regex 1.9.5",
  "serde 1.0.164",
  "serde_json 1.0.96",
  "sharded-slab",
@@ -9101,7 +9502,7 @@ version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 1.0.0",
  "digest 0.10.7",
  "rand 0.8.5",
  "static_assertions",
@@ -9473,7 +9874,7 @@ dependencies = [
  "cc",
  "cxx",
  "cxx-build",
- "regex 1.8.4",
+ "regex 1.9.5",
 ]
 
 [[package]]
@@ -9972,7 +10373,7 @@ version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61de7bac303dc551fe038e2b3cef0f571087a47571ea6e79a87692ac99b99699"
 dependencies = [
- "memchr 2.5.0",
+ "memchr 2.6.3",
 ]
 
 [[package]]

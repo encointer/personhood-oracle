@@ -70,11 +70,12 @@ use its_primitives::types::block::SignedBlock as SignedSidechainBlock;
 use its_storage::{interface::FetchBlocks, BlockPruner, SidechainStorageLock};
 use log::*;
 use my_node_runtime::{Hash, Header, RuntimeEvent};
+use regex::Regex;
 use sgx_types::*;
 use sp_runtime::traits::Header as HeaderT;
 use substrate_api_client::{
-	api::XtStatus, rpc::HandleSubscription, GetHeader, SubmitAndWatch, SubscribeChain,
-	SubscribeEvents,
+	api::XtStatus, rpc::HandleSubscription, EventRecord, GetHeader, Phase::ApplyExtrinsic,
+	SubmitAndWatch, SubscribeChain, SubscribeEvents,
 };
 use teerex_primitives::AnySigner;
 
@@ -86,7 +87,7 @@ use itc_parentchain::primitives::ParentchainId;
 use sp_core::crypto::{AccountId32, Ss58Codec};
 use sp_keyring::AccountKeyring;
 use sp_runtime::MultiSigner;
-use std::{str, sync::Arc, thread, time::Duration};
+use std::{fmt::Debug, str, sync::Arc, thread, time::Duration};
 
 mod account_funding;
 mod config;
@@ -682,8 +683,25 @@ fn init_target_parentchain<E>(
 	thread::Builder::new()
 		.name(format!("{:?}_parentchain_event_subscription", parentchain_id))
 		.spawn(move || loop {
-			if let Some(Ok(events)) = subscription.next_event::<RuntimeEvent, Hash>() {
-				print_events(events, parentchain_id)
+			match parentchain_id {
+				ParentchainId::Integritee =>
+					if let Some(Ok(events)) = subscription
+						.next_event::<my_node_runtime::RuntimeEvent, my_node_runtime::Hash>()
+					{
+						print_events(events, parentchain_id)
+					},
+				ParentchainId::TargetA =>
+					if let Some(Ok(events)) = subscription
+						.next_event::<target_a_runtime::RuntimeEvent, target_a_runtime::Hash>()
+					{
+						print_events(events, parentchain_id)
+					},
+				ParentchainId::TargetB =>
+					if let Some(Ok(events)) = subscription
+						.next_event::<target_b_runtime::RuntimeEvent, target_b_runtime::Hash>()
+					{
+						print_events(events, parentchain_id)
+					},
 			}
 		})
 		.unwrap();
@@ -767,30 +785,21 @@ fn spawn_worker_for_shard_polling<InitializationHandler>(
 	});
 }
 
-fn print_events(events: Vec<Event>, parentchain_id: ParentchainId) {
+fn print_events<R, H>(events: Vec<EventRecord<R, H>>, parentchain_id: ParentchainId)
+where
+	R: Debug,
+{
 	for evr in &events {
-		debug!("[{:?}] Decoded: phase = {:?}, event = {:?}", parentchain_id, evr.phase, evr.event);
-		match &evr.event {
-			RuntimeEvent::Balances(be) => {
-				info!("[+] Received balances event");
-				debug!("{:?}", be);
-				match &be {
-					pallet_balances::Event::Transfer {
-						from: transactor,
-						to: dest,
-						amount: value,
-					} => {
-						debug!("    Transactor:  {:?}", transactor.to_ss58check());
-						debug!("    Destination: {:?}", dest.to_ss58check());
-						debug!("    Value:       {:?}", value);
-					},
-					_ => {
-						trace!("Ignoring unsupported balances event");
-					},
-				}
-			},
-			_ => (),
+		if evr.phase == ApplyExtrinsic(0) {
+			// not interested in intrinsics
+			continue
 		}
+		let re = Regex::new(r"\s[0-9a-f]*\s\(").unwrap();
+		let event_str = re
+			.replace_all(format!("{:?}", evr.event).as_str(), "(")
+			.replace("RuntimeEvent::", "")
+			.replace("Event::", "");
+		println!("[{}] Event: {}", parentchain_id, event_str);
 	}
 }
 
