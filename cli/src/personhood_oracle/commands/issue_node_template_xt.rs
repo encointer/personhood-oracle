@@ -74,7 +74,7 @@ impl IssueNodeTemplateXtCmd {
 
 		match rpc_return_value.status {
 			DirectRequestStatus::Ok => {
-				println!("NodeTemplate Idex has been issued successfully.");
+				println!("NodeTemplate Index has been issued successfully.");
 			},
 			_ => {
 				let error_msg = "Node Template Xt issuance failed";

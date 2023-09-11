@@ -100,10 +100,10 @@ fn ensure_account_has_funds(api: &ParentchainApi, accountid: &AccountId32) -> Re
 	);
 	// check account balance
 	let free_balance = api.get_free_balance(accountid)?;
-	info!("TEE's free balance = {:?} (Account: {})", free_balance, accountid);
+	debug!("TEE's free balance = {:?} (Account: {})", free_balance, accountid);
 
 	let existential_deposit = api.get_existential_deposit()?;
-	info!("Existential deposit is = {:?}", existential_deposit);
+	debug!("Existential deposit is = {:?}", existential_deposit);
 	let balance_transfer_fee = api
 		.get_fee_details(
 			api.balance_transfer_allow_death(
@@ -119,7 +119,7 @@ fn ensure_account_has_funds(api: &ParentchainApi, accountid: &AccountId32) -> Re
 		.inclusion_fee
 		.unwrap()
 		.inclusion_fee();
-	info!("Balance Transfer Fee is = {:?}", balance_transfer_fee);
+	debug!("Balance Transfer Fee is = {:?}", balance_transfer_fee);
 
 	let min_required_funds = existential_deposit
 		.saturating_mul(EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS)
@@ -127,7 +127,7 @@ fn ensure_account_has_funds(api: &ParentchainApi, accountid: &AccountId32) -> Re
 	let missing_funds = min_required_funds.saturating_sub(free_balance);
 
 	if missing_funds > 0 {
-		info!("Transfer {:?} from Alice to {}", missing_funds, accountid);
+		debug!("Transfer {:?} from Alice to {}", missing_funds, accountid);
 		bootstrap_funds_from_alice(api, accountid, missing_funds)?;
 	}
 	Ok(())
@@ -165,7 +165,7 @@ fn bootstrap_funds_from_alice(
 	trace!("    Alice's Account Nonce is {}", nonce);
 
 	if funding_amount > alice_free {
-		println!(
+		error!(
             "funding amount is too high: please change EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS ({:?})",
             funding_amount
         );
@@ -176,7 +176,8 @@ fn bootstrap_funds_from_alice(
 	alice_signer_api.set_signer(ParentchainExtrinsicSigner::new(alice));
 
 	println!(
-		"[+] send extrinsic: bootstrap funding Enclave from Alice's funds (genesis hash {})",
+		"[+] send extrinsic: bootstrap funding Enclave from Alice's funds: {:?} (genesis hash {})",
+		funding_amount,
 		api.genesis_hash()
 	);
 	let xt = alice_signer_api
