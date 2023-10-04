@@ -517,7 +517,7 @@ fn create_nostr_badge_definition(signer_key: &Keys, reputation: u32) -> BadgeDef
 
 fn issue_node_template_xt_inner(params: Params) -> Result<(), String> {
 	trace!("evaluating reputation to maybe issue something on node template");
-	// Check reputation first - will be change later to have the user submit their `ProofOfAttendance`
+	// Check reputation first - will be changed later to have the user submit their `ProofOfAttendance`
 
 	let reputations = fetch_reputation_inner(params.clone())?;
 	let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
