@@ -213,7 +213,7 @@ where
 		for xt in extrinsics.iter() {
 			self.submit_xt_to_be_included(xt.clone());
 		}
-
+		trace!("ocall: sending {} extrinsics to {:?}", extrinsics.len(), self.parentchain_id);
 		self.ocall_api
 			.send_to_parentchain(extrinsics, &self.parentchain_id)
 			.map_err(|e| {

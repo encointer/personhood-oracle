@@ -154,18 +154,24 @@ class Worker:
 
         # Todo: make this configurable
         env = dict(os.environ, RUST_LOG='warn,ws=warn,sp_io=error,'
-                                        'substrate_api_client=warn,'
+                                        'substrate_api_client=error,'
                                         'jsonrpsee_ws_client=warn,'
                                         'jsonrpsee_ws_server=warn,'
                                         'enclave_runtime=info,'
-                                        'integritee_service=warn,'
+                                        'enclave_runtime::rpc::encointer_utils=info,'
+                                        'enclave_runtime::rpc::worker_api_direct=trace,'
                                         'itp_stf_state_handler=debug,'
+                                        'itp_extrinsics_factory=warn,'
                                         'its_consensus_common=debug,'
                                         'its_consensus_aura=trace,'
                                         'itc_parentchain_indirect_calls_executor=info,'
                                         'itc_parentchain_light_client=info,'
                                         'itc_parentchain_block_importer=debug,'
-                                        'ita_stf=debug')
+                                        'ita_stf=debug,'
+                                        'integritee_service=debug,'
+                                        'integritee_service::parentchain_handler=warn,'
+                                        'integritee_service::ocall_bridge=warn,'
+                                        'integritee_service::account_funding=warn')
         worker_cmd = self._assemble_cmd(flags=flags, subcommand_flags=subcommand_flags)
         print("worker command is "+ str(worker_cmd))
         return Popen(

@@ -24,7 +24,11 @@ use crate::{
 		encointer_utils::fetch_reputation,
 		nostr_utils::{get_ts, send_nostr_events},
 	},
-	utils::get_validator_accessor_from_solo_or_parachain,
+	utils::{
+		get_extrinsic_factory_from_target_b_solo_or_parachain,
+		get_validator_accessor_from_solo_or_parachain,
+		get_validator_accessor_from_target_b_solo_or_parachain,
+	},
 };
 use codec::{Decode, Encode};
 use core::result::Result;
@@ -33,13 +37,14 @@ use encointer_primitives::{
 };
 use ita_sgx_runtime::Runtime;
 use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, ExtrinsicSender};
+use itp_extrinsics_factory::CreateExtrinsics;
 use itp_primitives_cache::{GetPrimitives, GLOBAL_PRIMITIVES_CACHE};
 use itp_rpc::RpcReturnValue;
 use itp_sgx_crypto::key_repository::AccessPubkey;
 use itp_stf_executor::getter_executor::ExecuteGetter;
 use itp_stf_primitives::types::AccountId;
 use itp_top_pool_author::traits::AuthorApi;
-use itp_types::{DirectRequestStatus, Request, ShardIdentifier, H256};
+use itp_types::{DirectRequestStatus, OpaqueCall, Request, ShardIdentifier, H256};
 use itp_utils::{FromHexPrefixed, ToHexPrefixed};
 use its_primitives::types::block::SignedBlock;
 use its_sidechain::rpc_handler::{direct_top_pool_api, import_block_api};
@@ -63,7 +68,6 @@ use std::{
 	sync::Arc,
 	vec::Vec,
 };
-
 fn compute_hex_encoded_return_error(error_msg: &str) -> String {
 	RpcReturnValue::from_error_message(error_msg).to_hex()
 }
@@ -221,6 +225,22 @@ where
 			Ok(id) => RpcReturnValue {
 				do_watch: false,
 				value: id.as_bytes().to_vec(),
+				status: DirectRequestStatus::Ok,
+			}
+			.to_hex(),
+			Err(error) => compute_hex_encoded_return_error(error.as_str()),
+		};
+
+		Ok(json!(json_value))
+	});
+
+	// personhoodoracle_issueNodeTemplateXt
+	let personhoodoracle_issue_node_template_xt: &str = "personhoodoracle_issueNodeTemplateXt";
+	io.add_sync_method(personhoodoracle_issue_node_template_xt, move |params: Params| {
+		let json_value = match issue_node_template_xt_inner(params) {
+			Ok(id) => RpcReturnValue {
+				do_watch: false,
+				value: "Ok".as_bytes().to_vec(),
 				status: DirectRequestStatus::Ok,
 			}
 			.to_hex(),
@@ -493,6 +513,48 @@ fn create_nostr_badge_definition(signer_key: &Keys, reputation: u32) -> BadgeDef
 	let ts = get_ts();
 
 	builder.build(signer_key, ts, &secp).unwrap()
+}
+
+fn issue_node_template_xt_inner(params: Params) -> Result<(), String> {
+	trace!("evaluating reputation to maybe issue something on node template");
+	// Check reputation first - will be changed later to have the user submit their `ProofOfAttendance`
+
+	let reputations = fetch_reputation_inner(params.clone())?;
+	let verified_reputations = reputations.iter().filter(|rep| rep.is_verified()).count();
+
+	if verified_reputations == 0 {
+		return Err("The user does not have any reputation".to_string())
+	}
+
+	let hex_encoded_params =
+		params.clone().parse::<Vec<String>>().map_err(|e| format!("{:?}", e))?;
+
+	if hex_encoded_params.len() < 4 {
+		return Err(format!(
+			"Wrong number of arguments for Nostr badge request: {}, expected: {}",
+			hex_encoded_params.len(),
+			5
+		))
+	}
+	let (cid, cindex, account) = personhoodoracle_parse_params(params)?;
+
+	let subject_template_idx_bytes =
+		itp_utils::hex::decode_hex(&hex_encoded_params[3]).map_err(|e| format!("{:?}", e))?;
+	let subject_template_idx: u32 = Decode::decode(&mut subject_template_idx_bytes.as_slice())
+		.map_err(|e| format!("{:?}", e))?;
+
+	println!("[RPC] caller subject index on node-template is {}", subject_template_idx);
+
+	let call = OpaqueCall::from_tuple(&((7u8, 0u8), subject_template_idx));
+	let extrinsics_factory = get_extrinsic_factory_from_target_b_solo_or_parachain().unwrap();
+	let extrinsics: Vec<OpaqueExtrinsic> =
+		extrinsics_factory.create_extrinsics(&[call], None).unwrap();
+	let validator_access = get_validator_accessor_from_target_b_solo_or_parachain().unwrap();
+	validator_access
+		.execute_mut_on_validator(|v| v.send_extrinsics(extrinsics))
+		.unwrap();
+
+	Ok(())
 }
 
 pub fn sidechain_io_handler<ImportFn, Error>(import_fn: ImportFn) -> IoHandler

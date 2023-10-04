@@ -37,6 +37,7 @@ use itp_node_api::{
 };
 use itp_nonce_cache::{MutateNonce, Nonce};
 use itp_types::{parentchain::AccountId, OpaqueCall};
+use log::*;
 use sp_core::H256;
 use sp_runtime::{generic::Era, OpaqueExtrinsic};
 use std::{sync::Arc, vec::Vec};
@@ -112,6 +113,16 @@ where
 				(m.get_runtime_version(), m.get_runtime_transaction_version())
 			})?;
 
+		debug!(
+			"extrinsic factory creates {} extrinsics for chain with genesis hash: {:?}",
+			calls.len(),
+			self.genesis_hash
+		);
+		trace!("runtime_spec_version: {}", runtime_spec_version);
+		trace!("runtime_transaction_version: {}", runtime_spec_version);
+		trace!("additional extrinsic params: {:?}", additional_extrinsic_params);
+		trace!("start with nonce: {:?}", nonce_value);
+
 		let extrinsics_buffer: Vec<OpaqueExtrinsic> = calls
 			.iter()
 			.map(|call| {
@@ -123,17 +134,24 @@ where
 					additional_extrinsic_params,
 				);
 				let xt = compose_extrinsic_offline!(&self.signer, call, extrinsic_params).encode();
+				trace!(
+					"encoded extrinsic with nonce {}: 0x{}",
+					nonce_value,
+					hex::encode(xt.clone())
+				);
 				nonce_value += 1;
 				xt
 			})
 			.map(|xt| {
-				OpaqueExtrinsic::from_bytes(&xt)
-					.expect("A previously encoded extrinsic has valid codec; qed.")
+				let oe = OpaqueExtrinsic::from_bytes(&xt)
+					.expect("A previously encoded extrinsic has valid codec; qed.");
+				trace!("opaque extrinsic: {:?}", oe);
+				oe
 			})
 			.collect();
 
 		*nonce_lock = Nonce(nonce_value);
-
+		trace!("created {} extrinsics", extrinsics_buffer.len());
 		Ok(extrinsics_buffer)
 	}
 }

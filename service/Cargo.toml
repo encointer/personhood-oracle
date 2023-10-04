@@ -26,7 +26,7 @@ serde_json = "1.0"
 thiserror = "1.0"
 tokio = { version = "1.6.1", features = ["full"] }
 warp = "0.3"
-
+regex = "1.9.5"
 
 # ipfs
 ipfs-api = "0.11.0"
@@ -61,6 +61,9 @@ its-storage = { path = "../sidechain/storage" }
 # scs / integritee
 
 my-node-runtime = { package = "integritee-node-runtime", git = "https://github.com/integritee-network/integritee-node.git", branch = "sdk-v0.12.0-polkadot-v0.9.42" }
+target-a-runtime = { package = "encointer-node-notee-runtime", git = "https://github.com/encointer/encointer-node.git", branch = "polkadot-v0.9.42" }
+target-b-runtime = { package = "node-template-runtime", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+
 encointer-primitives = { git = "https://github.com/encointer/pallets", branch = "polkadot-v0.9.42", default-features = false, optional = true, features = ["full_crypto"] }
 sgx-verify = { git = "https://github.com/integritee-network/pallets.git", branch = "sdk-v0.12.0-polkadot-v0.9.42" }
 # `default-features = false` to remove the jsonrpsee dependency.

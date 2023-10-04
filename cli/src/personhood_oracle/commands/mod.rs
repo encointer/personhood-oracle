@@ -16,6 +16,10 @@
 */
 
 mod fetch_reputation;
+mod issue_node_template_xt;
 mod issue_nostr_badge;
 
-pub use self::{fetch_reputation::FetchReputationCmd, issue_nostr_badge::IssueNostrBadgeCmd};
+pub use self::{
+	fetch_reputation::FetchReputationCmd, issue_node_template_xt::IssueNodeTemplateXtCmd,
+	issue_nostr_badge::IssueNostrBadgeCmd,
+};

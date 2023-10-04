@@ -21,6 +21,9 @@ use codec::{Decode, Encode};
 use sp_runtime::{generic::Header as HeaderG, traits::BlakeTwo256, MultiAddress, MultiSignature};
 use sp_std::vec::Vec;
 
+#[cfg(feature = "std")]
+use std::fmt::Display;
+
 pub type StorageProof = Vec<Vec<u8>>;
 
 // Basic Types.
@@ -50,6 +53,18 @@ pub enum ParentchainId {
 	TargetA,
 	/// Another target chain containing custom business logic.
 	TargetB,
+}
+
+#[cfg(feature = "std")]
+impl Display for ParentchainId {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		let message = match self {
+			ParentchainId::Integritee => "L1:Integritee",
+			ParentchainId::TargetA => "L1:Encointer",
+			ParentchainId::TargetB => "L1:NodeTemplate",
+		};
+		write!(f, "{}", message)
+	}
 }
 
 pub trait IdentifyParentchain {

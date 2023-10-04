@@ -16,6 +16,7 @@
 */
 
 use crate::error::{Error, ServiceResult};
+use codec::Encode;
 use itp_node_api::api_client::{AccountApi, ParentchainApi, ParentchainExtrinsicSigner};
 use itp_settings::worker::{
 	EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS, REGISTERING_FEE_FACTOR_FOR_INIT_FUNDS,
@@ -24,6 +25,7 @@ use itp_types::parentchain::Balance;
 use log::*;
 use sp_core::{
 	crypto::{AccountId32, Ss58Codec},
+	hexdisplay::AsBytesRef,
 	Pair,
 };
 use sp_keyring::AccountKeyring;
@@ -31,7 +33,6 @@ use sp_runtime::MultiAddress;
 use substrate_api_client::{
 	extrinsic::BalancesExtrinsics, GetBalance, GetTransactionPayment, SubmitAndWatchUntilSuccess,
 };
-
 /// Information about the enclave on-chain account.
 pub trait EnclaveAccountInfo {
 	fn free_balance(&self) -> ServiceResult<Balance>;
@@ -92,20 +93,41 @@ pub fn setup_account_funding(
 
 // Alice plays the faucet and sends some funds to the account if balance is low
 fn ensure_account_has_funds(api: &ParentchainApi, accountid: &AccountId32) -> Result<(), Error> {
-	info!("Ensuring funds for Account: {} on chain with genesis hash {}", accountid, api.genesis_hash());
+	info!(
+		"Ensuring funds for Account: {} on chain with genesis hash {}",
+		accountid,
+		api.genesis_hash()
+	);
 	// check account balance
 	let free_balance = api.get_free_balance(accountid)?;
-	info!("TEE's free balance = {:?} (Account: {})", free_balance, accountid);
+	debug!("TEE's free balance = {:?} (Account: {})", free_balance, accountid);
 
 	let existential_deposit = api.get_existential_deposit()?;
-	info!("Existential deposit is = {:?}", existential_deposit);
+	debug!("Existential deposit is = {:?}", existential_deposit);
+	let balance_transfer_fee = api
+		.get_fee_details(
+			api.balance_transfer_allow_death(
+				MultiAddress::Address32([0u8; 32]),
+				existential_deposit,
+			)
+			.encode()
+			.into(),
+			None,
+		)
+		.unwrap()
+		.unwrap()
+		.inclusion_fee
+		.unwrap()
+		.inclusion_fee();
+	debug!("Balance Transfer Fee is = {:?}", balance_transfer_fee);
 
-	let min_required_funds =
-		existential_deposit.saturating_mul(EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS);
+	let min_required_funds = existential_deposit
+		.saturating_mul(EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS)
+		.saturating_add(balance_transfer_fee.saturating_mul(100));
 	let missing_funds = min_required_funds.saturating_sub(free_balance);
 
 	if missing_funds > 0 {
-		info!("Transfer {:?} from Alice to {}", missing_funds, accountid);
+		debug!("Transfer {:?} from Alice to {}", missing_funds, accountid);
 		bootstrap_funds_from_alice(api, accountid, missing_funds)?;
 	}
 	Ok(())
@@ -143,7 +165,7 @@ fn bootstrap_funds_from_alice(
 	trace!("    Alice's Account Nonce is {}", nonce);
 
 	if funding_amount > alice_free {
-		println!(
+		error!(
             "funding amount is too high: please change EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS ({:?})",
             funding_amount
         );
@@ -153,14 +175,27 @@ fn bootstrap_funds_from_alice(
 	let mut alice_signer_api = api.clone();
 	alice_signer_api.set_signer(ParentchainExtrinsicSigner::new(alice));
 
-	println!("[+] send extrinsic: bootstrap funding Enclave from Alice's funds");
+	println!(
+		"[+] send extrinsic: bootstrap funding Enclave from Alice's funds: {:?} (genesis hash {})",
+		funding_amount,
+		api.genesis_hash()
+	);
 	let xt = alice_signer_api
 		.balance_transfer_allow_death(MultiAddress::Id(accountid.clone()), funding_amount);
-	let xt_report = alice_signer_api.submit_and_watch_extrinsic_until_success(xt, false)?;
-	info!(
-		"[<] L1 extrinsic success. extrinsic hash: {:?} / status: {:?}",
-		xt_report.extrinsic_hash, xt_report.status
-	);
+	alice_signer_api
+		.submit_and_watch_extrinsic_until_success(xt, false)
+		.map_or_else(
+			|e| {
+				error!("{:?}", e);
+			},
+			|v| {
+				info!(
+					"[<] L1 extrinsic success. extrinsic hash: {:?} / status: {:?}",
+					v.extrinsic_hash, v.status
+				);
+			},
+		);
+
 	// Verify funds have arrived.
 	let free_balance = alice_signer_api.get_free_balance(accountid);
 	trace!("TEE's NEW free balance = {:?}", free_balance);
